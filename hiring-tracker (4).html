@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Hiring Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --bg-tertiary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b67;
+  --text-hint: #9b9b96;
+  --border-light: rgba(0,0,0,0.1);
+  --border-med: rgba(0,0,0,0.18);
+  --border-strong: rgba(0,0,0,0.28);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --blue-bg: #E6F1FB; --blue-text: #185FA5; --blue-border: #B5D4F4;
+  --green-bg: #EAF3DE; --green-text: #3B6D11; --green-border: #C0DD97;
+  --purple-bg: #EEEDFE; --purple-text: #534AB7; --purple-border: #AFA9EC;
+  --amber-bg: #FAEEDA; --amber-text: #854F0B; --amber-border: #FAC775;
+  --red-bg: #FCEBEB; --red-text: #A32D2D; --red-border: #F7C1C1;
+  --red-strong-bg: #F7C1C1; --red-strong-text: #791F1F;
+  --teal-bg: #E1F5EE; --teal-text: #0F6E56; --teal-border: #9FE1CB;
+  --gray-bg: #F1EFE8; --gray-text: #5F5E5A; --gray-border: #D3D1C7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;color:var(--text-primary);background:#ffffff;min-height:100vh;color-scheme:light;}
+.top-bar{background:#fff;border-bottom:0.5px solid var(--border-light);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10;}
+.top-bar h1{font-size:18px;font-weight:600;letter-spacing:-0.02em;}
+.top-bar-right{display:flex;gap:8px;align-items:center;}
+.save-ind{font-size:12px;color:#888;white-space:nowrap;}
+.btn{padding:7px 14px;border-radius:var(--radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--border-med);background:#fff;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;transition:background 0.12s;}
+.btn:hover{background:var(--bg-secondary);}
+.btn:disabled{opacity:0.5;cursor:default;}
+.btn-primary{background:var(--text-primary);color:#fff;border-color:transparent;}
+.btn-primary:hover{opacity:0.85;}
+.btn-danger{color:var(--red-text);border-color:var(--red-border);}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.stat-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 24px;background:#fff;border-bottom:0.5px solid var(--border-light);}
+.stat-card{border-radius:var(--radius-md);padding:14px 16px;text-align:center;}
+.stat-card .num{font-size:26px;font-weight:600;line-height:1;}
+.stat-card .lbl{font-size:12px;margin-top:4px;}
+.sc-blue{background:var(--blue-bg);} .sc-blue .num{color:var(--blue-text);} .sc-blue .lbl{color:var(--blue-text);opacity:0.8;}
+.sc-green{background:var(--green-bg);} .sc-green .num{color:var(--green-text);} .sc-green .lbl{color:var(--green-text);opacity:0.8;}
+.sc-purple{background:var(--purple-bg);} .sc-purple .num{color:var(--purple-text);} .sc-purple .lbl{color:var(--purple-text);opacity:0.8;}
+.page{padding:20px 24px;max-width:960px;margin:0 auto;}
+.sort-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sort-bar label{font-size:12px;color:var(--text-secondary);font-weight:500;}
+.sort-bar select{border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:5px 8px;font-size:12px;background:#fff;color:var(--text-primary);cursor:pointer;font-family:inherit;}
+.job-list{display:flex;flex-direction:column;gap:6px;}
+.job-row{background:#fff;border:0.5px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;}
+.job-row-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.12s;}
+.job-row-header:hover{background:var(--bg-secondary);}
+.job-title-block{flex:1;min-width:0;}
+.job-title-text{font-size:14px;font-weight:600;}
+.job-meta-text{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.job-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.b-open{background:var(--green-bg);color:var(--green-text);}
+.b-filled{background:var(--blue-bg);color:var(--blue-text);}
+.b-closed{background:var(--gray-bg);color:var(--gray-text);}
+.b-onhold{background:var(--amber-bg);color:var(--amber-text);}
+.b-new{background:var(--purple-bg);color:var(--purple-text);}
+.b-screening{background:var(--amber-bg);color:var(--amber-text);}
+.b-interview{background:var(--blue-bg);color:var(--blue-text);}
+.b-offer{background:var(--teal-bg);color:var(--teal-text);}
+.b-hired{background:var(--green-bg);color:var(--green-text);}
+.b-rejected{background:var(--red-bg);color:var(--red-text);}
+.b-removed{background:var(--red-strong-bg);color:var(--red-strong-text);}
+.back-link{font-size:13px;color:var(--text-secondary);cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px;background:none;border:none;font-family:inherit;padding:0;}
+.back-link:hover{color:var(--text-primary);}
+.job-detail-card{background:#fff;border:0.5px solid var(--border-light);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:14px;}
+.jd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.jd-title{font-size:20px;font-weight:600;margin-bottom:4px;letter-spacing:-0.02em;}
+.jd-meta{font-size:13px;color:var(--text-secondary);}
+.jd-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.status-pills{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.status-pill{padding:5px 14px;border-radius:20px;font-size:12px;border:0.5px solid var(--border-light);cursor:pointer;background:var(--bg-secondary);color:var(--text-secondary);font-family:inherit;transition:all 0.12s;}
+.status-pill:hover{border-color:var(--border-med);}
+.sp-Open.active{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.sp-Filled.active{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.sp-Closed.active{background:var(--gray-bg);color:var(--gray-text);border-color:var(--gray-border);}
+.sp-On-Hold.active{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.jd-desc{font-size:13px;color:var(--text-secondary);margin-top:10px;line-height:1.6;padding-top:10px;border-top:0.5px solid var(--border-light);}
+.jd-extra{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border-light);}
+.jd-field label{font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;}
+.jd-field span{font-size:13px;}
+.posting-attach{border:0.5px dashed var(--border-med);border-radius:var(--radius-md);padding:10px 14px;font-size:12px;color:var(--text-secondary);cursor:pointer;text-align:center;background:var(--bg-secondary);transition:border-color 0.12s;display:block;width:100%;font-family:inherit;}
+.posting-attach:hover{border-color:var(--border-strong);}
+.posting-file{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-light);border-radius:var(--radius-md);font-size:12px;}
+.posting-file a{color:var(--blue-text);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.posting-file a:hover{text-decoration:underline;}
+.applicants-card{background:#fff;border:0.5px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;}
+.applicants-toolbar{padding:12px 16px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.applicants-toolbar h3{font-size:14px;font-weight:600;}
+.toolbar-right{display:flex;gap:8px;align-items:center;}
+.search-input{border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:6px 10px;font-size:13px;width:190px;background:#fff;color:var(--text-primary);font-family:inherit;}
+.search-input:focus{outline:none;border-color:var(--border-strong);}
+.stage-group-header{padding:7px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;background:var(--bg-secondary);border-top:0.5px solid var(--border-light);display:flex;align-items:center;gap:6px;}
+.applicant-item{border-bottom:0.5px solid var(--border-light);}
+.applicant-item:last-child{border-bottom:none;}
+.applicant-item.is-removed{background:#fff8f8;}
+.applicant-row{padding:11px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.1s;}
+.applicant-row:hover{background:var(--bg-secondary);}
+.applicant-item.is-removed .applicant-row:hover{background:var(--red-bg);}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-text);flex-shrink:0;}
+.avatar.av-removed{background:var(--red-strong-bg);color:var(--red-strong-text);}
+.applicant-info{flex:1;min-width:0;}
+.applicant-name{font-size:13px;font-weight:500;}
+.applicant-sub{font-size:11px;color:var(--text-secondary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.applicant-item.is-removed .applicant-name{color:var(--red-text);text-decoration:line-through;}
+.app-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.via-label{font-size:11px;color:var(--text-hint);}
+.removed-header{background:var(--red-bg);padding:8px 16px;font-size:12px;font-weight:600;color:var(--red-text);display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--red-border);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--text-secondary);gap:10px;text-align:center;}
+.empty-state i{font-size:36px;opacity:0.3;}
+.loading-state{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-secondary);gap:10px;font-size:14px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#fff;border-radius:var(--radius-lg);padding:24px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;border:0.5px solid var(--border-med);position:relative;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;letter-spacing:-0.01em;}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:20px;line-height:1;padding:0;}
+.modal-close:hover{color:var(--text-primary);}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:8px 10px;font-size:13px;background:#fff;color:var(--text-primary);font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--border-strong);}
+.form-group textarea{resize:vertical;line-height:1.5;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.form-row .form-group{margin-bottom:0;}
+.modal-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border-light);}
+.modal-footer-left,.modal-footer-right{display:flex;gap:6px;}
+.cand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.cand-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--blue-text);flex-shrink:0;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.contact-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);}
+.contact-item a{color:var(--blue-text);text-decoration:none;}
+.contact-item a:hover{text-decoration:underline;}
+.resume-zone{border:0.5px dashed var(--border-med);border-radius:var(--radius-md);padding:14px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;background:var(--bg-secondary);margin-bottom:12px;transition:border-color 0.12s;}
+.resume-zone:hover{border-color:var(--border-strong);}
+.resume-attached{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-light);border-radius:var(--radius-md);margin-bottom:12px;font-size:12px;}
+.resume-attached a{color:var(--blue-text);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.resume-attached a:hover{text-decoration:underline;}
+.stage-pills-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+.stage-pill{padding:5px 12px;border-radius:20px;font-size:12px;border:0.5px solid var(--border-light);cursor:pointer;background:var(--bg-secondary);color:var(--text-secondary);font-family:inherit;transition:all 0.12s;}
+.stage-pill:hover{border-color:var(--border-med);}
+.sp-New.active{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border);}
+.sp-Screening.active{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.sp-Interview.active{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.sp-Offer-Sent.active{background:var(--teal-bg);color:var(--teal-text);border-color:var(--teal-border);}
+.sp-Hired.active{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.sp-Rejected.active{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);}
+.sp-Removed.active{background:var(--red-strong-bg);color:var(--red-strong-text);border-color:var(--red-border);}
+.change-log-list{font-size:12px;color:var(--text-secondary);max-height:120px;overflow-y:auto;}
+.change-log-entry{padding:4px 0;border-bottom:0.5px solid var(--border-light);}
+.change-log-entry:last-child{border-bottom:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <h1>Hiring tracker</h1>
+    <div class="top-bar-right">
+      <span class="save-ind" id="save-ind"></span>
+      <button class="btn" onclick="exportData()"><i class="ti ti-download"></i> Export</button>
+      <button class="btn" onclick="triggerImport()"><i class="ti ti-upload"></i> Import</button>
+      <input type="file" id="import-input" style="display:none" accept=".json" onchange="importData(this)">
+      <button class="btn btn-primary" onclick="openNewJob()"><i class="ti ti-plus"></i> Add position</button>
+    </div>
+  </div>
+  <div class="stat-bar" id="stat-bar">
+    <div class="stat-card sc-blue"><div class="num">—</div><div class="lbl">Positions</div></div>
+    <div class="stat-card sc-green"><div class="num">—</div><div class="lbl">Open</div></div>
+    <div class="stat-card sc-purple"><div class="num">—</div><div class="lbl">Active applicants</div></div>
+  </div>
+  <div id="main-page"><div class="loading-state"><i class="ti ti-loader" style="font-size:20px;"></i> Loading…</div></div>
+</div>
+<div id="modal-root"></div>
+
+<script>
+const SB_URL = 'https://zjuvstnqvxkycatdpjnd.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqdXZzdG5xdnhreWNhdGRwam5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzI3NTUsImV4cCI6MjA5MDcwODc1NX0.83qzH26IQE1qPoxcltYlPEcuMzW7COaZEd9EvAdlCdM';
+
+const STAGES = ['New','Screening','Interview','Offer Sent','Hired','Rejected','Removed'];
+const JOB_STATUSES = ['Open','Filled','Closed','On Hold'];
+const SOURCE_OPTIONS = ['','Company website','Indeed','LinkedIn','Employee referral','ZipRecruiter','Glassdoor','Personal contact','Walk-in','Other'];
+const STAGE_KEY = {New:'new',Screening:'screening',Interview:'interview','Offer Sent':'offer',Hired:'hired',Rejected:'rejected',Removed:'removed'};
+const STAGE_ORDER = ['Screening','Interview','Offer Sent','Hired','New','Rejected'];
+const STATUS_CLASS = {Open:'open',Filled:'filled',Closed:'closed','On Hold':'onhold'};
+
+function initials(n){return(n||'?').trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function fmtDate(d){if(!d)return'';try{const p=d.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
+function nowISO(){return new Date().toISOString().slice(0,10);}
+
+// ── Supabase helpers ──────────────────────────────────────────────────────────
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...opts.headers
+    },
+    method: opts.method || 'GET',
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function dbGetJobs() {
+  return await sbFetch('jobs?order=created_at.asc');
+}
+async function dbGetApplicants(jobId) {
+  return await sbFetch('applicants?job_id=eq.' + jobId + '&order=created_at.asc');
+}
+async function dbGetAllApplicants() {
+  return await sbFetch('applicants?order=created_at.asc');
+}
+async function dbUpsertJob(job) {
+  return await sbFetch('jobs?on_conflict=id', {
+    method: 'POST',
+    prefer: 'return=representation,resolution=merge-duplicates',
+    body: job
+  });
+}
+async function dbUpsertApplicant(app) {
+  return await sbFetch('applicants?on_conflict=id', {
+    method: 'POST',
+    prefer: 'return=representation,resolution=merge-duplicates',
+    body: app
+  });
+}
+async function dbDeleteJob(id) {
+  await sbFetch('jobs?id=eq.' + id, { method: 'DELETE', prefer: '' });
+}
+async function dbDeleteApplicant(id) {
+  await sbFetch('applicants?id=eq.' + id, { method: 'DELETE', prefer: '' });
+}
+
+// ── Local state (in-memory cache of DB) ──────────────────────────────────────
+let state = { jobs: [], applicants: {}, selectedJobId: null, sortBy: 'default', searchQuery: '' };
+
+function setSaveInd(msg, color) {
+  const el = document.getElementById('save-ind');
+  if (el) { el.textContent = msg; el.style.color = color || '#888'; }
+}
+
+async function loadAll() {
+  setSaveInd('Loading…', '#888');
+  try {
+    const [jobs, applicants] = await Promise.all([dbGetJobs(), dbGetAllApplicants()]);
+    state.jobs = jobs || [];
+    state.applicants = {};
+    for (const a of (applicants || [])) {
+      const k = String(a.job_id);
+      if (!state.applicants[k]) state.applicants[k] = [];
+      // Parse change_log if it came back as string
+      if (typeof a.change_log === 'string') {
+        try { a.change_log = JSON.parse(a.change_log); } catch { a.change_log = []; }
+      }
+      state.applicants[k].push(a);
+    }
+    setSaveInd('✓ Connected', '#3B6D11');
+    render();
+  } catch(e) {
+    setSaveInd('⚠ Connection error', '#A32D2D');
+    document.getElementById('main-page').innerHTML = `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not connect to database.<br><small>${e.message}</small></p></div>`;
+    console.error(e);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() { renderStats(); state.selectedJobId ? renderJobDetail(state.selectedJobId) : renderJobList(); }
+
+function renderStats() {
+  const total = state.jobs.length;
+  const open = state.jobs.filter(j => j.status === 'Open').length;
+  const totalApps = Object.values(state.applicants).reduce((s,a) => s + a.filter(x => x.status !== 'Removed').length, 0);
+  document.getElementById('stat-bar').innerHTML = `
+    <div class="stat-card sc-blue"><div class="num">${total}</div><div class="lbl">Positions</div></div>
+    <div class="stat-card sc-green"><div class="num">${open}</div><div class="lbl">Open</div></div>
+    <div class="stat-card sc-purple"><div class="num">${totalApps}</div><div class="lbl">Active applicants</div></div>`;
+}
+
+function getSortedJobs() {
+  const jobs = [...state.jobs];
+  if (state.sortBy === 'alpha') jobs.sort((a,b) => a.title.localeCompare(b.title));
+  else if (state.sortBy === 'dept') jobs.sort((a,b) => (a.department||'').localeCompare(b.department||'') || a.title.localeCompare(b.title));
+  else if (state.sortBy === 'location') jobs.sort((a,b) => (a.location||'').localeCompare(b.location||'') || a.title.localeCompare(b.title));
+  return jobs;
+}
+
+function renderJobList() {
+  const jobs = getSortedJobs();
+  document.getElementById('main-page').innerHTML = `<div class="page">
+    <div class="sort-bar">
+      <label>Sort by:</label>
+      <select onchange="state.sortBy=this.value;renderJobList()">
+        <option value="default"${state.sortBy==='default'?' selected':''}>Date added</option>
+        <option value="alpha"${state.sortBy==='alpha'?' selected':''}>Alphabetically</option>
+        <option value="dept"${state.sortBy==='dept'?' selected':''}>Department</option>
+        <option value="location"${state.sortBy==='location'?' selected':''}>Location</option>
+      </select>
+    </div>
+    <div class="job-list">${jobs.map(j => {
+      const apps = state.applicants[String(j.id)] || [];
+      const active = apps.filter(a => a.status !== 'Removed').length;
+      const removed = apps.filter(a => a.status === 'Removed').length;
+      const sc = STATUS_CLASS[j.status] || 'closed';
+      return `<div class="job-row"><div class="job-row-header" onclick="selectJob(${j.id})">
+        <div class="job-title-block">
+          <div class="job-title-text">${j.title}</div>
+          <div class="job-meta-text">${[j.department, j.location, j.openings ? j.openings+' opening'+(j.openings>1?'s':'') : null, active ? active+' applicant'+(active!==1?'s':'') : null, removed ? '<span style="color:var(--red-text)">'+removed+' removed</span>' : null].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="job-row-right"><span class="badge b-${sc}">${j.status}</span><i class="ti ti-chevron-right" style="color:var(--text-secondary);font-size:14px;"></i></div>
+      </div></div>`;
+    }).join('')}
+    ${jobs.length === 0 ? '<div class="empty-state"><i class="ti ti-briefcase"></i><p>No positions yet. Add one to get started.</p></div>' : ''}
+    </div></div>`;
+}
+
+function selectJob(id) { state.selectedJobId = id; state.searchQuery = ''; render(); }
+function backToList() { state.selectedJobId = null; render(); }
+
+function renderJobDetail(id) {
+  const job = state.jobs.find(j => j.id == id); if (!job) return;
+  const apps = state.applicants[String(id)] || [];
+  const q = state.searchQuery.toLowerCase();
+  const active = apps.filter(a => a.status !== 'Removed');
+  const removed = apps.filter(a => a.status === 'Removed');
+  const filtered = q ? active.filter(a => a.name.toLowerCase().includes(q) || (a.email||'').toLowerCase().includes(q) || (a.notes||'').toLowerCase().includes(q)) : active;
+  const grouped = {}; STAGE_ORDER.forEach(s => grouped[s] = []);
+  filtered.forEach(a => { const s = STAGES.includes(a.status) && a.status !== 'Removed' ? a.status : 'New'; (grouped[s] = grouped[s]||[]).push(a); });
+  const appRows = STAGE_ORDER.map(stage => {
+    const list = grouped[stage]||[]; if (!list.length) return '';
+    return `<div class="stage-group-header">${stage} <span style="font-weight:400;opacity:0.7;">(${list.length})</span></div>${list.map(a => appCardHTML(a)).join('')}`;
+  }).join('');
+  const removedHTML = removed.length ? `<div class="removed-header"><i class="ti ti-archive"></i> Removed (${removed.length}) — use "Delete candidate" to permanently remove</div>${removed.map(a => appCardHTML(a, true)).join('')}` : '';
+  const postingHTML = job.posting_file
+    ? `<div class="posting-file"><i class="ti ti-file-description" style="font-size:15px;color:var(--text-secondary);"></i><a href="${job.posting_file}" target="_blank">${job.posting_name||'View posting'}</a><button class="btn btn-sm btn-danger" onclick="removePosting(${job.id})" style="padding:2px 8px;"><i class="ti ti-x"></i></button></div>`
+    : `<button class="posting-attach" onclick="triggerPosting(${job.id})"><i class="ti ti-upload" style="font-size:13px;"></i> Attach job posting PDF</button><input type="file" id="posting-${job.id}" style="display:none" accept=".pdf,.doc,.docx" onchange="handlePosting(${job.id},this)">`;
+
+  document.getElementById('main-page').innerHTML = `<div class="page">
+    <button class="back-link" onclick="backToList()"><i class="ti ti-arrow-left" style="font-size:13px;"></i> Back to positions</button>
+    <div class="job-detail-card">
+      <div class="jd-top">
+        <div><div class="jd-title">${job.title}</div><div class="jd-meta">${[job.department, job.location].filter(Boolean).join(' · ')}</div></div>
+        <div class="jd-actions">
+          <button class="btn btn-sm" onclick="openEditJob(${job.id})"><i class="ti ti-edit"></i> Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteJob(${job.id})"><i class="ti ti-trash"></i> Delete</button>
+        </div>
+      </div>
+      <div class="status-pills">${JOB_STATUSES.map(s => `<button class="status-pill sp-${s.replace(' ','-')}${job.status===s?' active':''}" onclick="changeJobStatus(${job.id},'${s}')">${s}</button>`).join('')}</div>
+      ${job.description ? `<div class="jd-desc">${job.description}</div>` : ''}
+      <div class="jd-extra">
+        <div class="jd-field"><label>Openings needed</label><span>${job.openings||1}</span></div>
+        <div class="jd-field"><label>Job posting</label>${postingHTML}</div>
+      </div>
+    </div>
+    <div class="applicants-card">
+      <div class="applicants-toolbar">
+        <h3>Applicants <span style="font-weight:400;color:var(--text-secondary);font-size:13px;">(${active.length})</span></h3>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" placeholder="Search…" value="${state.searchQuery}" oninput="state.searchQuery=this.value;renderJobDetail(${id})">
+          <button class="btn btn-primary btn-sm" onclick="openNewCandidate(${job.id})"><i class="ti ti-user-plus"></i> Add applicant</button>
+        </div>
+      </div>
+      ${appRows || '<div class="empty-state"><i class="ti ti-users"></i><p>No applicants yet.</p></div>'}
+      ${removedHTML}
+    </div>
+  </div>`;
+}
+
+function appCardHTML(a, isRemoved) {
+  const sk = STAGE_KEY[a.status] || 'new';
+  const src = a.source ? `<span class="via-label">via ${a.source}</span>` : '';
+  return `<div class="applicant-item${isRemoved?' is-removed':''}">
+    <div class="applicant-row" onclick="openCandidate(${a.id})">
+      <div class="avatar${isRemoved?' av-removed':''}">${initials(a.name)}</div>
+      <div class="applicant-info">
+        <div class="applicant-name">${a.name}</div>
+        <div class="applicant-sub">${[a.email&&a.email!='N/A'?a.email:'', a.applied_date?'Applied '+fmtDate(a.applied_date):''].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div class="app-right">${src}${isRemoved?'<span class="badge b-removed">Removed</span>':`<span class="badge b-${sk}">${a.status}</span>`}<i class="ti ti-chevron-right" style="color:var(--text-secondary);font-size:13px;"></i></div>
+    </div>
+  </div>`;
+}
+
+// ── Job actions ───────────────────────────────────────────────────────────────
+async function changeJobStatus(id, val) {
+  const j = state.jobs.find(j => j.id == id); if (!j) return;
+  j.status = val;
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertJob(j);
+    setSaveInd('✓ Saved', '#3B6D11');
+    render();
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+function openNewJob() {
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Job title *</label><input id="nj-title" type="text" placeholder="Survey Technician"></div><div class="form-group"><label>Openings needed</label><input id="nj-openings" type="number" min="1" value="1"></div></div>
+    <div class="form-row"><div class="form-group"><label>Department</label><input id="nj-dept" type="text" placeholder="Civil Survey"></div><div class="form-group"><label>Location</label><input id="nj-loc" type="text" placeholder="San Antonio"></div></div>
+    <div class="form-group"><label>Status</label><select id="nj-status">${JOB_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="nj-desc"></textarea></div>
+  `, 'New position', [{label:'Create position', primary:true, action:'submitNewJob()'}]);
+}
+
+async function submitNewJob() {
+  const title = document.getElementById('nj-title')?.value?.trim(); if (!title) { alert('Title is required'); return; }
+  const j = { id: Date.now(), title, department: document.getElementById('nj-dept')?.value||'', location: document.getElementById('nj-loc')?.value||'', status: document.getElementById('nj-status')?.value||'Open', description: document.getElementById('nj-desc')?.value||'', openings: parseInt(document.getElementById('nj-openings')?.value)||1, posting_name: '', posting_file: null };
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertJob(j);
+    state.jobs.push(j);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobList(); renderStats();
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+function openEditJob(id) {
+  const j = state.jobs.find(x => x.id == id); if (!j) return;
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Job title *</label><input id="ej-title" type="text" value="${(j.title||'').replace(/"/g,'&quot;')}"></div><div class="form-group"><label>Openings needed</label><input id="ej-openings" type="number" min="1" value="${j.openings||1}"></div></div>
+    <div class="form-row"><div class="form-group"><label>Department</label><input id="ej-dept" type="text" value="${(j.department||'').replace(/"/g,'&quot;')}"></div><div class="form-group"><label>Location</label><input id="ej-loc" type="text" value="${(j.location||'').replace(/"/g,'&quot;')}"></div></div>
+    <div class="form-group"><label>Status</label><select id="ej-status">${JOB_STATUSES.map(s=>`<option${s===j.status?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="ej-desc">${j.description||''}</textarea></div>
+  `, 'Edit position', [{label:'Save changes', primary:true, action:`submitEditJob(${id})`}]);
+}
+
+async function submitEditJob(id) {
+  const j = state.jobs.find(x => x.id == id); if (!j) return;
+  j.title = document.getElementById('ej-title')?.value?.trim() || j.title;
+  j.department = document.getElementById('ej-dept')?.value || '';
+  j.location = document.getElementById('ej-loc')?.value || '';
+  j.status = document.getElementById('ej-status')?.value || j.status;
+  j.description = document.getElementById('ej-desc')?.value || '';
+  j.openings = parseInt(document.getElementById('ej-openings')?.value) || 1;
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertJob(j);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobDetail(id); renderStats();
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+async function deleteJob(id) {
+  if (!confirm('Delete this position and all its applicants? This CANNOT be undone.')) return;
+  setSaveInd('Deleting…', '#888');
+  try {
+    await dbDeleteJob(id);
+    state.jobs = state.jobs.filter(j => j.id != id);
+    delete state.applicants[String(id)];
+    state.selectedJobId = null;
+    setSaveInd('✓ Deleted', '#3B6D11');
+    render();
+  } catch(e) { setSaveInd('⚠ Error', '#A32D2D'); toast('Delete failed: ' + e.message, true); }
+}
+
+async function triggerPosting(id) { document.getElementById('posting-' + id)?.click(); }
+async function handlePosting(jobId, input) {
+  const file = input.files[0]; if (!file) return;
+  // Upload to Supabase Storage
+  setSaveInd('Uploading…', '#888');
+  try {
+    const path = Date.now() + '-' + file.name;
+    const res = await fetch(`${SB_URL}/storage/v1/object/postings/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type },
+      body: file
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const url = `${SB_URL}/storage/v1/object/public/postings/${path}`;
+    const j = state.jobs.find(x => x.id == jobId);
+    if (j) { j.posting_name = file.name; j.posting_file = url; await dbUpsertJob(j); }
+    setSaveInd('✓ Saved', '#3B6D11');
+    renderJobDetail(jobId);
+  } catch(e) {
+    // Fall back to base64 if storage bucket doesn't exist yet
+    const r = new FileReader();
+    r.onload = async ev => {
+      const j = state.jobs.find(x => x.id == jobId);
+      if (j) { j.posting_name = file.name; j.posting_file = ev.target.result; await dbUpsertJob(j); }
+      setSaveInd('✓ Saved', '#3B6D11');
+      renderJobDetail(jobId);
+    };
+    r.readAsDataURL(file);
+  }
+}
+async function removePosting(jobId) {
+  const j = state.jobs.find(x => x.id == jobId); if (!j) return;
+  j.posting_name = ''; j.posting_file = null;
+  await dbUpsertJob(j); renderJobDetail(jobId);
+}
+
+// ── Candidate actions ─────────────────────────────────────────────────────────
+function findApp(appId) {
+  for (const arr of Object.values(state.applicants)) { const a = arr.find(x => x.id == appId); if (a) return a; }
+  return null;
+}
+
+function openCandidate(appId) {
+  const app = findApp(appId); if (!app) return;
+  const isRemoved = app.status === 'Removed';
+  const log = Array.isArray(app.change_log) ? app.change_log : [];
+  const logHTML = log.length ? log.slice().reverse().map(e => `<div class="change-log-entry">${e}</div>`).join('') : '<span style="color:var(--text-hint)">No changes recorded yet.</span>';
+  const resumeHTML = app.resume_file && app.resume_file !== '{}'
+    ? `<div class="resume-attached"><i class="ti ti-file-text" style="font-size:16px;color:var(--text-secondary);"></i><a href="${app.resume_file}" target="_blank">${app.resume_name||'View resume'}</a><button class="btn btn-sm btn-danger" onclick="removeResume(${app.id})" style="padding:2px 8px;"><i class="ti ti-x"></i></button></div>`
+    : `<div class="resume-zone" onclick="triggerResume(${app.id})"><i class="ti ti-upload" style="font-size:20px;display:block;margin-bottom:4px;"></i>Click to attach resume</div>`;
+  const stagePills = STAGES.map(s => { const k = s.replace(' ','-'); return `<button class="stage-pill sp-${k}${app.status===s?' active':''}" onclick="clickStage(${app.id},'${s}')">${s}</button>`; }).join('');
+  showModal(`
+    <div class="cand-header">
+      <div class="cand-avatar-lg">${initials(app.name)}</div>
+      <div><div style="font-size:17px;font-weight:600;">${app.name}</div><div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">Applied ${fmtDate(app.applied_date)||'—'}</div></div>
+    </div>
+    <div class="contact-grid">
+      ${app.phone ? `<div class="contact-item"><i class="ti ti-phone" style="font-size:14px;"></i> ${app.phone}</div>` : ''}
+      ${app.email && app.email!='N/A' ? `<div class="contact-item"><i class="ti ti-mail" style="font-size:14px;"></i> <a href="mailto:${app.email}">${app.email}</a></div>` : ''}
+    </div>
+    ${resumeHTML}
+    <input type="file" id="res-${app.id}" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg" onchange="handleResume(${app.id},this)">
+    <div class="form-group"><label>How they applied / source</label><select id="cd-src-${app.id}">${SOURCE_OPTIONS.map(s=>`<option${s===app.source?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Pipeline stage</label><div class="stage-pills-wrap">${stagePills}</div></div>
+    <div class="form-group"><label>Notes</label><textarea rows="3" id="cd-notes-${app.id}">${app.notes||''}</textarea></div>
+    <div class="form-group"><label>Stage change log</label><div class="change-log-list">${logHTML}</div></div>
+  `, app.name, [
+    {label:'Save', primary:true, action:`saveCandidate(${app.id})`},
+    isRemoved ? {label:'Restore', action:`restoreCandidate(${app.id})`} : {label:'Remove from list', action:`markRemoved(${app.id})`},
+    {label:'Delete candidate', danger:true, action:`deleteCandidate(${app.id})`}
+  ]);
+}
+
+async function clickStage(appId, newStage) {
+  if (newStage === 'Removed') { markRemoved(appId); return; }
+  const name = prompt(`Who is making this change to "${newStage}"?\nYour name will be logged.`);
+  if (name === null) return;
+  const app = findApp(appId); if (!app) return;
+  const prev = app.status; app.status = newStage;
+  if (!Array.isArray(app.change_log)) app.change_log = [];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: ${prev} → ${newStage}`);
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertApplicant(app);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); openCandidate(appId);
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+async function markRemoved(appId) {
+  const name = prompt('Who is removing this candidate?\nThey will be shaded red but NOT deleted — use "Delete candidate" to permanently remove.');
+  if (name === null) return;
+  const app = findApp(appId); if (!app) return;
+  const prev = app.status; app.status = 'Removed';
+  if (!Array.isArray(app.change_log)) app.change_log = [];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: removed (was ${prev})`);
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertApplicant(app);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobDetail(state.selectedJobId);
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+async function restoreCandidate(appId) {
+  const name = prompt('Who is restoring this candidate?'); if (name === null) return;
+  const app = findApp(appId); if (!app) return;
+  app.status = 'New';
+  if (!Array.isArray(app.change_log)) app.change_log = [];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: restored → New`);
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertApplicant(app);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobDetail(state.selectedJobId);
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+async function deleteCandidate(appId) {
+  if (!confirm('Permanently delete this candidate? This CANNOT be undone.')) return;
+  setSaveInd('Deleting…', '#888');
+  try {
+    await dbDeleteApplicant(appId);
+    for (const [k, arr] of Object.entries(state.applicants)) {
+      const i = arr.findIndex(x => x.id == appId);
+      if (i >= 0) { arr.splice(i, 1); break; }
+    }
+    setSaveInd('✓ Deleted', '#3B6D11');
+    closeModal(); renderJobDetail(state.selectedJobId); renderStats();
+  } catch(e) { setSaveInd('⚠ Error', '#A32D2D'); toast('Delete failed: ' + e.message, true); }
+}
+
+async function saveCandidate(appId) {
+  const app = findApp(appId); if (!app) return;
+  app.notes = document.getElementById('cd-notes-' + appId)?.value || '';
+  app.source = document.getElementById('cd-src-' + appId)?.value || '';
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertApplicant(app);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobDetail(state.selectedJobId);
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+async function removeResume(appId) {
+  const app = findApp(appId); if (!app) return;
+  app.resume_name = ''; app.resume_file = null;
+  await dbUpsertApplicant(app); closeModal(); openCandidate(appId);
+}
+function triggerResume(id) { document.getElementById('res-' + id)?.click(); }
+async function handleResume(appId, input) {
+  const file = input.files[0]; if (!file) return;
+  setSaveInd('Uploading…', '#888');
+  try {
+    const path = Date.now() + '-' + file.name.replace(/\s+/g,'%20');
+    const res = await fetch(`${SB_URL}/storage/v1/object/resumes/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type },
+      body: file
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const url = `${SB_URL}/storage/v1/object/public/resumes/${path}`;
+    const app = findApp(appId);
+    if (app) { app.resume_name = file.name; app.resume_file = url; await dbUpsertApplicant(app); }
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); openCandidate(appId);
+  } catch(e) {
+    toast('Upload failed — ' + e.message, true);
+    setSaveInd('⚠ Upload failed', '#A32D2D');
+  }
+}
+
+function openNewCandidate(jobId) {
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Full name *</label><input id="nc-name" type="text" placeholder="Jane Smith"></div><div class="form-group"><label>Phone</label><input id="nc-phone" type="text"></div></div>
+    <div class="form-group"><label>Email</label><input id="nc-email" type="email"></div>
+    <div class="form-row"><div class="form-group"><label>Applied date</label><input id="nc-date" type="date" value="${nowISO()}"></div><div class="form-group"><label>Stage</label><select id="nc-stage">${STAGES.filter(s=>s!=='Removed').map(s=>`<option>${s}</option>`).join('')}</select></div></div>
+    <div class="form-group"><label>Source / how they applied</label><select id="nc-src">${SOURCE_OPTIONS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Notes</label><textarea rows="3" id="nc-notes"></textarea></div>
+  `, 'Add applicant', [{label:'Add applicant', primary:true, action:`submitNewCandidate(${jobId})`}]);
+}
+
+async function submitNewCandidate(jobId) {
+  const name = document.getElementById('nc-name')?.value?.trim(); if (!name) { alert('Name is required'); return; }
+  const stage = document.getElementById('nc-stage')?.value || 'New';
+  const log = [];
+  if (stage !== 'New') { const who = prompt(`Adding at stage "${stage}" — your name for the log:`) || 'Unknown'; log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${who}: added at ${stage}`); }
+  const a = { id: Date.now(), job_id: jobId, name, phone: document.getElementById('nc-phone')?.value||'', email: document.getElementById('nc-email')?.value||'', applied_date: document.getElementById('nc-date')?.value||'', status: stage, notes: document.getElementById('nc-notes')?.value||'', source: document.getElementById('nc-src')?.value||'', resume_name: '', resume_file: null, change_log: log };
+  setSaveInd('Saving…', '#888');
+  try {
+    await dbUpsertApplicant(a);
+    if (!state.applicants[String(jobId)]) state.applicants[String(jobId)] = [];
+    state.applicants[String(jobId)].push(a);
+    setSaveInd('✓ Saved', '#3B6D11');
+    closeModal(); renderJobDetail(jobId); renderStats();
+  } catch(e) { setSaveInd('⚠ Save failed', '#A32D2D'); toast('Save failed: ' + e.message, true); }
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+function exportData() {
+  const data = JSON.stringify({jobs: state.jobs, applicants: state.applicants}, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `hiring-tracker-${nowISO()}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function triggerImport() { document.getElementById('import-input').click(); }
+async function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.jobs || !d.applicants) throw new Error('Invalid format');
+      if (!confirm(`Import ${d.jobs.length} positions? All existing data will be replaced.`)) return;
+      setSaveInd('Importing…', '#888');
+      // Upsert all jobs
+      for (const j of d.jobs) {
+        const clean = { id:j.id, title:j.title, department:j.department||'', location:j.location||'', status:j.status||'Open', description:j.description||'', openings:j.openings||1, posting_name:j.posting_name||'', posting_file:j.posting_file||null };
+        await dbUpsertJob(clean);
+      }
+      // Upsert all applicants
+      for (const arr of Object.values(d.applicants)) {
+        for (const a of arr) {
+          const clean = { id:a.id, job_id:a.job_id, name:a.name, email:a.email||'', phone:a.phone||'', applied_date:a.applied_date||'', status:a.status||'New', notes:a.notes||'', source:a.source||'', resume_name:a.resume_name||'', resume_file:a.resume_file||null, change_log:a.change_log||[] };
+          await dbUpsertApplicant(clean);
+        }
+      }
+      setSaveInd('✓ Import complete', '#3B6D11');
+      toast('Import complete — reloading data');
+      await loadAll();
+    } catch(err) { toast('Import failed: ' + err.message, true); setSaveInd('⚠ Import failed', '#A32D2D'); }
+  };
+  r.readAsText(file); input.value = '';
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function showModal(body, title, buttons=[]) {
+  const leftBtns = buttons.filter(b => b.danger || (!b.primary && b.action)).map(b => b.danger ? `<button class="btn btn-danger btn-sm" onclick="${b.action}">${b.label}</button>` : `<button class="btn btn-sm" onclick="${b.action}">${b.label}</button>`).join('');
+  const rightBtns = buttons.filter(b => b.primary).map(b => `<button class="btn btn-primary btn-sm" onclick="${b.action}">${b.label}</button>`).join('');
+  document.getElementById('modal-root').innerHTML = `
+    <div class="overlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+        <h3>${title}</h3>${body}
+        <div class="modal-footer">
+          <div class="modal-footer-left">${leftBtns}<button class="btn btn-sm" onclick="closeModal()">Cancel</button></div>
+          <div class="modal-footer-right">${rightBtns}</div>
+        </div>
+      </div>
+    </div>`;
+}
+function closeModal(e) { if (e && e.target !== e.currentTarget) return; document.getElementById('modal-root').innerHTML = ''; }
+
+function toast(msg, err) {
+  const existing = document.getElementById('toast-el'); if (existing) existing.remove();
+  const t = document.createElement('div'); t.id = 'toast-el';
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:20px;right:20px;background:${err?'#FCEBEB':'#1a1a1a'};color:${err?'#A32D2D':'#fff'};padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;font-family:inherit;border:0.5px solid ${err?'#F7C1C1':'transparent'};box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
