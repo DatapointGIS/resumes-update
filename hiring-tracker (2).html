@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Hiring Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --bg-tertiary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b67;
+  --text-hint: #9b9b96;
+  --border-light: rgba(0,0,0,0.1);
+  --border-med: rgba(0,0,0,0.18);
+  --border-strong: rgba(0,0,0,0.28);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --blue-bg: #E6F1FB; --blue-text: #185FA5; --blue-border: #B5D4F4;
+  --green-bg: #EAF3DE; --green-text: #3B6D11; --green-border: #C0DD97;
+  --purple-bg: #EEEDFE; --purple-text: #534AB7; --purple-border: #AFA9EC;
+  --amber-bg: #FAEEDA; --amber-text: #854F0B; --amber-border: #FAC775;
+  --red-bg: #FCEBEB; --red-text: #A32D2D; --red-border: #F7C1C1;
+  --red-strong-bg: #F7C1C1; --red-strong-text: #791F1F;
+  --teal-bg: #E1F5EE; --teal-text: #0F6E56; --teal-border: #9FE1CB;
+  --gray-bg: #F1EFE8; --gray-text: #5F5E5A; --gray-border: #D3D1C7;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;color:var(--text-primary);background:#ffffff !important;min-height:100vh;color-scheme:light;}
+.top-bar{background:var(--bg-primary);border-bottom:0.5px solid var(--border-light);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10;}
+.top-bar h1{font-size:18px;font-weight:600;letter-spacing:-0.02em;}
+.top-bar-right{display:flex;gap:8px;}
+.btn{padding:7px 14px;border-radius:var(--radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--border-med);background:var(--bg-primary);color:var(--text-primary);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;transition:background 0.12s;}
+.btn:hover{background:var(--bg-secondary);}
+.btn-primary{background:var(--text-primary);color:var(--bg-primary);border-color:transparent;}
+.btn-primary:hover{opacity:0.85;}
+.btn-danger{color:var(--red-text);border-color:var(--red-border);}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.stat-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 24px;background:var(--bg-primary);border-bottom:0.5px solid var(--border-light);}
+.stat-card{border-radius:var(--radius-md);padding:14px 16px;text-align:center;}
+.stat-card .num{font-size:26px;font-weight:600;line-height:1;}
+.stat-card .lbl{font-size:12px;margin-top:4px;}
+.sc-blue{background:var(--blue-bg);} .sc-blue .num{color:var(--blue-text);} .sc-blue .lbl{color:var(--blue-text);opacity:0.8;}
+.sc-green{background:var(--green-bg);} .sc-green .num{color:var(--green-text);} .sc-green .lbl{color:var(--green-text);opacity:0.8;}
+.sc-purple{background:var(--purple-bg);} .sc-purple .num{color:var(--purple-text);} .sc-purple .lbl{color:var(--purple-text);opacity:0.8;}
+.page{padding:20px 24px;max-width:960px;margin:0 auto;}
+.sort-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sort-bar label{font-size:12px;color:var(--text-secondary);font-weight:500;}
+.sort-bar select{border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:5px 8px;font-size:12px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;font-family:inherit;}
+.job-list{display:flex;flex-direction:column;gap:6px;}
+.job-row{background:var(--bg-primary);border:0.5px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;}
+.job-row-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.12s;}
+.job-row-header:hover{background:var(--bg-secondary);}
+.job-title-block{flex:1;min-width:0;}
+.job-title-text{font-size:14px;font-weight:600;}
+.job-meta-text{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.job-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.b-open{background:var(--green-bg);color:var(--green-text);}
+.b-filled{background:var(--blue-bg);color:var(--blue-text);}
+.b-closed{background:var(--gray-bg);color:var(--gray-text);}
+.b-onhold{background:var(--amber-bg);color:var(--amber-text);}
+.b-new{background:var(--purple-bg);color:var(--purple-text);}
+.b-screening{background:var(--amber-bg);color:var(--amber-text);}
+.b-interview{background:var(--blue-bg);color:var(--blue-text);}
+.b-offer{background:var(--teal-bg);color:var(--teal-text);}
+.b-hired{background:var(--green-bg);color:var(--green-text);}
+.b-rejected{background:var(--red-bg);color:var(--red-text);}
+.b-removed{background:var(--red-strong-bg);color:var(--red-strong-text);}
+.back-link{font-size:13px;color:var(--text-secondary);cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px;background:none;border:none;font-family:inherit;padding:0;}
+.back-link:hover{color:var(--text-primary);}
+.job-detail-card{background:var(--bg-primary);border:0.5px solid var(--border-light);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:14px;}
+.jd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.jd-title{font-size:20px;font-weight:600;margin-bottom:4px;letter-spacing:-0.02em;}
+.jd-meta{font-size:13px;color:var(--text-secondary);}
+.jd-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.status-pills{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.status-pill{padding:5px 14px;border-radius:20px;font-size:12px;border:0.5px solid var(--border-light);cursor:pointer;background:var(--bg-secondary);color:var(--text-secondary);font-family:inherit;transition:all 0.12s;}
+.status-pill:hover{border-color:var(--border-med);}
+.sp-Open.active{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.sp-Filled.active{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.sp-Closed.active{background:var(--gray-bg);color:var(--gray-text);border-color:var(--gray-border);}
+.sp-On-Hold.active{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.jd-desc{font-size:13px;color:var(--text-secondary);margin-top:10px;line-height:1.6;padding-top:10px;border-top:0.5px solid var(--border-light);}
+.jd-extra{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border-light);}
+.jd-field label{font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;}
+.jd-field span{font-size:13px;}
+.posting-attach{border:0.5px dashed var(--border-med);border-radius:var(--radius-md);padding:10px 14px;font-size:12px;color:var(--text-secondary);cursor:pointer;text-align:center;background:var(--bg-secondary);transition:border-color 0.12s;display:block;width:100%;}
+.posting-attach:hover{border-color:var(--border-strong);}
+.posting-file{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-light);border-radius:var(--radius-md);font-size:12px;}
+.posting-file a{color:var(--blue-text);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.posting-file a:hover{text-decoration:underline;}
+.applicants-card{background:var(--bg-primary);border:0.5px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;}
+.applicants-toolbar{padding:12px 16px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.applicants-toolbar h3{font-size:14px;font-weight:600;}
+.toolbar-right{display:flex;gap:8px;align-items:center;}
+.search-input{border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:6px 10px;font-size:13px;width:190px;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;}
+.search-input:focus{outline:none;border-color:var(--border-strong);}
+.stage-group-header{padding:7px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;background:var(--bg-secondary);border-top:0.5px solid var(--border-light);display:flex;align-items:center;gap:6px;}
+.applicant-item{border-bottom:0.5px solid var(--border-light);}
+.applicant-item:last-child{border-bottom:none;}
+.applicant-item.is-removed{background:#fff8f8;}
+@media(prefers-color-scheme:dark){.applicant-item.is-removed{background:#1e1010;}}
+.applicant-row{padding:11px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.1s;}
+.applicant-row:hover{background:var(--bg-secondary);}
+.applicant-item.is-removed .applicant-row:hover{background:var(--red-bg);}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-text);flex-shrink:0;}
+.avatar.av-removed{background:var(--red-strong-bg);color:var(--red-strong-text);}
+.applicant-info{flex:1;min-width:0;}
+.applicant-name{font-size:13px;font-weight:500;}
+.applicant-sub{font-size:11px;color:var(--text-secondary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.applicant-item.is-removed .applicant-name{color:var(--red-text);text-decoration:line-through;}
+.app-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.via-label{font-size:11px;color:var(--text-hint);}
+.removed-header{background:var(--red-bg);padding:8px 16px;font-size:12px;font-weight:600;color:var(--red-text);display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--red-border);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--text-secondary);gap:10px;text-align:center;}
+.empty-state i{font-size:36px;opacity:0.3;}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--bg-primary);border-radius:var(--radius-lg);padding:24px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;border:0.5px solid var(--border-med);position:relative;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;letter-spacing:-0.01em;}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:20px;line-height:1;padding:0;}
+.modal-close:hover{color:var(--text-primary);}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:0.5px solid var(--border-med);border-radius:var(--radius-md);padding:8px 10px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--border-strong);}
+.form-group textarea{resize:vertical;line-height:1.5;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.form-row .form-group{margin-bottom:0;}
+.modal-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border-light);}
+.modal-footer-left,.modal-footer-right{display:flex;gap:6px;}
+/* Candidate detail */
+.cand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.cand-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--blue-text);flex-shrink:0;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.contact-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);}
+.contact-item a{color:var(--blue-text);text-decoration:none;}
+.contact-item a:hover{text-decoration:underline;}
+.resume-zone{border:0.5px dashed var(--border-med);border-radius:var(--radius-md);padding:14px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;background:var(--bg-secondary);margin-bottom:12px;transition:border-color 0.12s;}
+.resume-zone:hover{border-color:var(--border-strong);}
+.resume-attached{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-light);border-radius:var(--radius-md);margin-bottom:12px;font-size:12px;}
+.resume-attached a{color:var(--blue-text);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.resume-attached a:hover{text-decoration:underline;}
+.stage-pills-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+.stage-pill{padding:5px 12px;border-radius:20px;font-size:12px;border:0.5px solid var(--border-light);cursor:pointer;background:var(--bg-secondary);color:var(--text-secondary);font-family:inherit;transition:all 0.12s;}
+.stage-pill:hover{border-color:var(--border-med);}
+.sp-New.active{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border);}
+.sp-Screening.active{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.sp-Interview.active{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.sp-Offer-Sent.active{background:var(--teal-bg);color:var(--teal-text);border-color:var(--teal-border);}
+.sp-Hired.active{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.sp-Rejected.active{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);}
+.sp-Removed.active{background:var(--red-strong-bg);color:var(--red-strong-text);border-color:var(--red-border);}
+.change-log-list{font-size:12px;color:var(--text-secondary);max-height:120px;overflow-y:auto;}
+.change-log-entry{padding:4px 0;border-bottom:0.5px solid var(--border-light);}
+.change-log-entry:last-child{border-bottom:none;}
+.section-sep{border-top:0.5px solid var(--border-light);margin:12px 0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <h1>Hiring tracker</h1>
+    <div class="top-bar-right">
+      <button class="btn" onclick="exportData()"><i class="ti ti-download" aria-hidden="true"></i> Export</button>
+      <button class="btn" onclick="triggerImport()"><i class="ti ti-upload" aria-hidden="true"></i> Import</button>
+      <input type="file" id="import-input" style="display:none" accept=".json" onchange="importData(this)">
+      <button class="btn btn-primary" onclick="openNewJob()"><i class="ti ti-plus" aria-hidden="true"></i> Add position</button>
+    </div>
+  </div>
+  <div class="stat-bar" id="stat-bar"></div>
+  <div id="main-page"></div>
+</div>
+<div id="modal-root"></div>
+
+<script>
+const STAGES=['New','Screening','Interview','Offer Sent','Hired','Rejected','Removed'];
+const JOB_STATUSES=['Open','Filled','Closed','On Hold'];
+const SOURCE_OPTIONS=['','Company website','Indeed','LinkedIn','Employee referral','ZipRecruiter','Glassdoor','Personal contact','Walk-in','Other'];
+const STAGE_KEY={New:'new',Screening:'screening',Interview:'interview','Offer Sent':'offer',Hired:'hired',Rejected:'rejected',Removed:'removed'};
+const STAGE_ORDER=['Screening','Interview','Offer Sent','Hired','New','Rejected'];
+
+function initials(n){return(n||'?').trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function fmtDate(d){if(!d)return'';try{const p=d.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
+function nowISO(){return new Date().toISOString().slice(0,10);}
+
+const SEED_JOBS=[
+  {id:1778187870887,title:"Party Chief",department:"Civil Survey",location:"San Antonio",status:"Open",description:"X2; 5+ years experience with civil market projects; 3+ years experience with residential market projects; 5+ years experience with total station and survey level instrumentation",openings:2,posting_name:"",posting_file:null},
+  {id:1778188035281,title:"Instrument Technician",department:"Civil Survey",location:"San Antonio",status:"Open",description:"X2; Desirable: 3+ years of survey experience; Prior experience with Trimble Access; Prior experience with Trimble GNSS and total station equipment; Prior experience with SX10, SX12, X7, or X9 LiDAR scanning equipment",openings:2,posting_name:"",posting_file:null},
+  {id:1775085737333,title:"Project Engineer",department:"Engineering",location:"San Antonio",status:"Open",description:"x1. 2-6 yr PE",openings:1,posting_name:"",posting_file:null},
+  {id:1775085222388,title:"Project EIT",department:"Engineering",location:"San Antonio",status:"Open",description:"x1",openings:1,posting_name:"",posting_file:null},
+  {id:1775085188248,title:"Civil CAD Technician",department:"Engineering",location:"San Antonio",status:"Open",description:"x1",openings:1,posting_name:"",posting_file:null},
+  {id:1775084008256,title:"CAD Technician",department:"Civil Survey",location:"San Antonio",status:"Open",description:"x1. 3-10 years experience",openings:1,posting_name:"",posting_file:null},
+  {id:1775083896594,title:"Instrument Technician",department:"Oil & Gas Survey",location:"Hobbs",status:"Open",description:"x1",openings:1,posting_name:"",posting_file:null},
+  {id:1775083870319,title:"Party Chief",department:"Oil & Gas Survey",location:"Hobbs",status:"Open",description:"x1",openings:1,posting_name:"",posting_file:null},
+  {id:1775078928501,title:"Project Manager (Upstream)",department:"Oil & Gas Survey",location:"Odessa",status:"Open",description:"x1",openings:1,posting_name:"",posting_file:null},
+  {id:1775078833639,title:"CAD Technician (Midstream)",department:"Oil & Gas Survey",location:"San Antonio",status:"Open",description:"x2",openings:2,posting_name:"",posting_file:null},
+  {id:1775078754117,title:"Cad Technician (Upstream)",department:"Oil & Gas Survey",location:"Odessa",status:"Open",description:"x1. 5-7 Years experience",openings:1,posting_name:"",posting_file:null},
+  {id:1775138575339,title:"Drafting Coordinator",department:"Survey",location:"San Antonio",status:"Open",description:"",openings:1,posting_name:"",posting_file:null}
+];
+
+const SEED_APPLICANTS={
+"1775084008256":[{id:1775141857100,job_id:1775084008256,name:"Josef Rusnak",email:"josefrrusnak@gmail.com",phone:"210.232.1693",applied_date:"2026-04-02",status:"New",notes:"",source:"",resume_name:"",resume_file:null,change_log:[]}],
+"1775078928501":[{id:1775141878684,job_id:1775078928501,name:"Stephanie Barrera",email:"",phone:"",applied_date:"2026-04-02",status:"New",notes:"Very strong candidate. Currently at Kimley-Horn. Personal recommendation of Randy & Lenny.",source:"Employee referral",resume_name:"",resume_file:null,change_log:[]}],
+"1775078833639":[{id:1775142940568,job_id:1775078833639,name:"Christian Avila",email:"Christian.Avila1@hotmail.com",phone:"718.608.7665",applied_date:"2026-04-02",status:"New",notes:"Civil tech with survey experience. Could be used for either department.",source:"",resume_name:"",resume_file:null,change_log:[]},{id:1775142962968,job_id:1775078833639,name:"Tina Rios",email:"tinaviolarios@gmail.com",phone:"",applied_date:"2026-04-02",status:"New",notes:"Strong candidate. Recommended by Victor Retana.",source:"Employee referral",resume_name:"",resume_file:null,change_log:[]}],
+"1778188035281":[
+{id:1778192665446,job_id:1778188035281,name:"Luis Torres",email:"Luisitotorres242@gmail.com",phone:"210-780-1194",applied_date:"2026-04-06",status:"New",notes:"Rodman experience + OSHA-10 + PEC",source:"",resume_name:"20260406_IT_SA_Luis Torres.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192664958-20260406_IT_SA_Luis%20Torres.pdf",change_log:[]},
+{id:1778192819314,job_id:1778188035281,name:"James Ybarbo",email:"james500w211@icloud.com",phone:"210-501-2205",applied_date:"2026-04-02",status:"New",notes:"4 years I-tech experience at Pape Dawson",source:"",resume_name:"20260402_IT_SA_James Ybarbo.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192818755-20260402_IT_SA_James%20Ybarbo.pdf",change_log:[]},
+{id:1778192929069,job_id:1778188035281,name:"Diego Silva",email:"silvadie000@gmail.com",phone:"956-655-0874",applied_date:"2026-03-02",status:"Rejected",notes:"Several years Party Chief + CAD tech experience; sent application 3/17/26, no response",source:"",resume_name:"20260302_IT_SA_Diego Silva.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192928625-20260302_IT_SA_Diego%20Silva.pdf",change_log:[]},
+{id:1778511065025,job_id:1778188035281,name:"Carlos Ayon",email:"carlos.ayon1990@gmail.com",phone:"1-805-228-9914",applied_date:"2026-05-09",status:"Hired",notes:"No survey experience",source:"",resume_name:"20260509_IT_SA_Carlos Ayon.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778511063252-20260509_IT_SA_Carlos%20Ayon.pdf",change_log:[]},
+{id:1779286551242,job_id:1778188035281,name:"Jose Leos",email:"jleosjrda14me@gmail.com",phone:"210-649-0195",applied_date:"2026-05-20",status:"Rejected",notes:"Applied for Party Chief and Instrument Tech. Left last job as IT due to difference of opinion with management. Sent application 5/12/26, no response.",source:"Company website",resume_name:"20260518_IT_SA_Jose Leos.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779286549306-20260518_IT_SA_Jose%20Leos.pdf",change_log:[]},
+{id:1781103081877,job_id:1778188035281,name:"David L. Moore",email:"moore.davidlee320@gmail.com",phone:"806-332-0841",applied_date:"2026-06-10",status:"New",notes:"18 yrs in Law Enforcement. 38 yr Class A CDL License, H2S Certified.",source:"",resume_name:"20260609_IT_SA_David L Moore.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1781103080668-20260609_IT_SA_David%20L%20Moore.pdf",change_log:[]}
+],
+"1778187870887":[
+{id:1778506404721,job_id:1778187870887,name:"Jose Leos",email:"jleosjrda14me@gmail.com",phone:"1-210-649-0195",applied_date:"2026-05-11",status:"Rejected",notes:"32 years experience, 15 as Party Chief. Sent application 5/12/26, never replied.",source:"Indeed",resume_name:"20260510_PC_SA_Jose Leos.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778506403713-20260510_PC_SA_Jose%20Leos.pdf",change_log:[]},
+{id:1778191598853,job_id:1778187870887,name:"Lance Nooe",email:"LNooe82@gmail.com",phone:"657-478-3607",applied_date:"2026-01-16",status:"Screening",notes:"10+ years Party Chief experience",source:"",resume_name:"20260116_PC_SA_Lance Nooe.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778191598327-20260116_PC_SA_Lance%20Nooe.pdf",change_log:[]},
+{id:1778261761302,job_id:1778187870887,name:'C.J. "Oliver" Lee',email:"leeoliverc@gmail.com",phone:"1-318-498-9889",applied_date:"2026-05-08",status:"New",notes:"14 yrs experience. Skills and abilities are impressive.",source:"Company website",resume_name:"20260508_PC_SA_C.J. Oliver Lee.docx",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778265430328-20260508_PC_SA_C.J.%20Oliver%20Lee.docx",change_log:[]},
+{id:1778267295134,job_id:1778187870887,name:"JerMarquis Hampton",email:"jermarquishampton@ymail.com",phone:"1-325-725-5622",applied_date:"2026-05-08",status:"New",notes:"I-Man for 2 years and Party Chief 10 years.",source:"",resume_name:"20260508_PC_SA_JerMarquis Hampton.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778267294248-20260508_PC_SA_%20JerMarquis%20Hampton.pdf",change_log:[]},
+{id:1778858712074,job_id:1778187870887,name:"Andres Leal",email:"aleal1128@outlook.com",phone:"1-210-954-2226",applied_date:"2026-05-15",status:"Screening",notes:"12 years experience in surveying.",source:"Indeed",resume_name:"20260514_PC_SA_Andres Leal.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778858711099-20260514_PC_SA_Andres%20Leal.pdf",change_log:[]},
+{id:1778688503675,job_id:1778187870887,name:"Graciano Sanchez IV",email:"Chano.sanchez4@icloud.com",phone:"210-556-8728",applied_date:"2026-04-02",status:"Screening",notes:"~15 years experience",source:"",resume_name:"20260402_PC_SA_Graciano Sanchez.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778188503077-20260402_PC_SA_Graciano%20Sanchez.pdf",change_log:[]},
+{id:1778689072512,job_id:1778187870887,name:"Esteban Hinojosa",email:"steviehinojosa2000@gmail.com",phone:"1-361-226-2887",applied_date:"2026-05-13",status:"Rejected",notes:"Experienced Party Chief with Bachelor in Geospatial Information Science. Sent offer letter; Mr. Hinojosa found employment elsewhere.",source:"",resume_name:"20260512_PC_SA_Esteban Hinojosa.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778689070617-20260512_PC_SA_Esteban%20Hinojosa.pdf",change_log:[]},
+{id:1780939441024,job_id:1778187870887,name:"Jesus Luna",email:"jllunajesus@gmail.com",phone:"9562401684",applied_date:"2026-06-08",status:"New",notes:"9+ years of experience. SUAS Part 107 Remote Pilot. Impressive.",source:"",resume_name:"20260607_PC_SA_Jesus Luna.pdf",resume_file:"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780939438208-20260607_PC_SA_Jesus%20Luna.pdf",change_log:[]}
+],
+"1775085188248":[{id:1775141816901,job_id:1775085188248,name:"Mynor Velasquez",email:"v4mynor@gmail.com",phone:"210.268.8885",applied_date:"2026-04-02",status:"New",notes:"",source:"",resume_name:"",resume_file:null,change_log:[]}]
+};
+
+// NOTE: The seed data above is abbreviated for file size. Import your full JSON export from the previous version to restore all applicants.
+
+let state={jobs:[],applicants:{},selectedJobId:null,sortBy:'default',searchQuery:''};
+
+const LS_KEY='datapoint_hiring_v2';
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){const d=JSON.parse(raw);state.jobs=d.jobs||[];state.applicants=d.applicants||{};}
+    else{state.jobs=JSON.parse(JSON.stringify(SEED_JOBS));state.applicants=JSON.parse(JSON.stringify(SEED_APPLICANTS));}
+  }catch(e){state.jobs=JSON.parse(JSON.stringify(SEED_JOBS));state.applicants=JSON.parse(JSON.stringify(SEED_APPLICANTS));}
+  render();
+}
+function saveState(silent){
+  try{localStorage.setItem(LS_KEY,JSON.stringify({jobs:state.jobs,applicants:state.applicants}));if(!silent)toast('Saved');}
+  catch(e){toast('Save failed — storage may be full',true);}
+}
+function toast(msg,err){
+  const existing=document.getElementById('toast-el');if(existing)existing.remove();
+  const t=document.createElement('div');t.id='toast-el';
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;right:20px;background:${err?'var(--red-bg)':'var(--text-primary)'};color:${err?'var(--red-text)':'var(--bg-primary)'};padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;font-family:inherit;border:0.5px solid ${err?'var(--red-border)':'transparent'};box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+function render(){renderStats();state.selectedJobId?renderJobDetail(state.selectedJobId):renderJobList();}
+function renderStats(){
+  const total=state.jobs.length;
+  const open=state.jobs.filter(j=>j.status==='Open').length;
+  const totalApps=Object.values(state.applicants).reduce((s,a)=>s+a.filter(x=>x.status!=='Removed').length,0);
+  document.getElementById('stat-bar').innerHTML=`
+    <div class="stat-card sc-blue"><div class="num">${total}</div><div class="lbl">Positions</div></div>
+    <div class="stat-card sc-green"><div class="num">${open}</div><div class="lbl">Open</div></div>
+    <div class="stat-card sc-purple"><div class="num">${totalApps}</div><div class="lbl">Active applicants</div></div>`;
+}
+function getSortedJobs(){
+  const jobs=[...state.jobs];
+  if(state.sortBy==='alpha')jobs.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(state.sortBy==='dept')jobs.sort((a,b)=>(a.department||'').localeCompare(b.department||'')||a.title.localeCompare(b.title));
+  else if(state.sortBy==='location')jobs.sort((a,b)=>(a.location||'').localeCompare(b.location||'')||a.title.localeCompare(b.title));
+  return jobs;
+}
+const STATUS_CLASS={Open:'open',Filled:'filled',Closed:'closed','On Hold':'onhold'};
+function renderJobList(){
+  const jobs=getSortedJobs();
+  document.getElementById('main-page').innerHTML=`<div class="page">
+    <div class="sort-bar">
+      <label>Sort by:</label>
+      <select onchange="state.sortBy=this.value;renderJobList()">
+        <option value="default"${state.sortBy==='default'?' selected':''}>Date added</option>
+        <option value="alpha"${state.sortBy==='alpha'?' selected':''}>Alphabetically</option>
+        <option value="dept"${state.sortBy==='dept'?' selected':''}>Department</option>
+        <option value="location"${state.sortBy==='location'?' selected':''}>Location</option>
+      </select>
+    </div>
+    <div class="job-list">${jobs.map(j=>{
+      const apps=state.applicants[j.id]||[];
+      const active=apps.filter(a=>a.status!=='Removed').length;
+      const removed=apps.filter(a=>a.status==='Removed').length;
+      const sc=STATUS_CLASS[j.status]||'closed';
+      return`<div class="job-row"><div class="job-row-header" onclick="selectJob(${j.id})">
+        <div class="job-title-block">
+          <div class="job-title-text">${j.title}</div>
+          <div class="job-meta-text">${[j.department,j.location,j.openings?j.openings+' opening'+(j.openings>1?'s':''):null,active?active+' applicant'+(active!==1?'s':''):null,removed?'<span style="color:var(--red-text)">'+removed+' removed</span>':null].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="job-row-right"><span class="badge b-${sc}">${j.status}</span><i class="ti ti-chevron-right" style="color:var(--text-secondary);font-size:14px;"></i></div>
+      </div></div>`;
+    }).join('')}</div></div>`;
+}
+function selectJob(id){state.selectedJobId=id;state.searchQuery='';render();}
+function backToList(){state.selectedJobId=null;render();}
+function renderJobDetail(id){
+  const job=state.jobs.find(j=>j.id==id);if(!job)return;
+  const apps=state.applicants[id]||[];
+  const q=state.searchQuery.toLowerCase();
+  const active=apps.filter(a=>a.status!=='Removed');
+  const removed=apps.filter(a=>a.status==='Removed');
+  const filtered=q?active.filter(a=>a.name.toLowerCase().includes(q)||(a.email||'').toLowerCase().includes(q)||(a.notes||'').toLowerCase().includes(q)):active;
+  const grouped={};STAGE_ORDER.forEach(s=>grouped[s]=[]);
+  filtered.forEach(a=>{const s=STAGES.includes(a.status)&&a.status!=='Removed'?a.status:'New';(grouped[s]=grouped[s]||[]).push(a);});
+  const appRows=STAGE_ORDER.map(stage=>{
+    const list=grouped[stage]||[];if(!list.length)return'';
+    return`<div class="stage-group-header">${stage} <span style="font-weight:400;opacity:0.7;">(${list.length})</span></div>${list.map(a=>appCardHTML(a)).join('')}`;
+  }).join('');
+  const removedHTML=removed.length?`<div class="removed-header"><i class="ti ti-archive"></i> Removed (${removed.length}) — use "Delete candidate" to permanently remove</div>${removed.map(a=>appCardHTML(a,true)).join('')}`:'';
+  const postingHTML=job.posting_file
+    ?`<div class="posting-file"><i class="ti ti-file-description" style="font-size:15px;color:var(--text-secondary);"></i><a href="${job.posting_file}" target="_blank">${job.posting_name||'View posting'}</a><button class="btn btn-sm btn-danger" onclick="removePosting(${job.id})" style="padding:2px 8px;"><i class="ti ti-x"></i></button></div>`
+    :`<button class="posting-attach" onclick="triggerPosting(${job.id})"><i class="ti ti-upload" style="font-size:13px;"></i> Attach job posting PDF</button><input type="file" id="posting-${job.id}" style="display:none" accept=".pdf,.doc,.docx" onchange="handlePosting(${job.id},this)">`;
+
+  document.getElementById('main-page').innerHTML=`<div class="page">
+    <button class="back-link" onclick="backToList()"><i class="ti ti-arrow-left" style="font-size:13px;"></i> Back to positions</button>
+    <div class="job-detail-card">
+      <div class="jd-top">
+        <div><div class="jd-title">${job.title}</div><div class="jd-meta">${[job.department,job.location].filter(Boolean).join(' · ')}</div></div>
+        <div class="jd-actions">
+          <button class="btn btn-sm" onclick="openEditJob(${job.id})"><i class="ti ti-edit"></i> Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteJob(${job.id})"><i class="ti ti-trash"></i> Delete</button>
+        </div>
+      </div>
+      <div class="status-pills">${JOB_STATUSES.map(s=>`<button class="status-pill sp-${s.replace(' ','-')}${job.status===s?' active':''}" onclick="changeJobStatus(${job.id},'${s}')">${s}</button>`).join('')}</div>
+      ${job.description?`<div class="jd-desc">${job.description}</div>`:''}
+      <div class="jd-extra">
+        <div class="jd-field"><label>Openings needed</label><span>${job.openings||1}</span></div>
+        <div class="jd-field"><label>Job posting</label>${postingHTML}</div>
+      </div>
+    </div>
+    <div class="applicants-card">
+      <div class="applicants-toolbar">
+        <h3>Applicants <span style="font-weight:400;color:var(--text-secondary);font-size:13px;">(${active.length})</span></h3>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" placeholder="Search…" value="${state.searchQuery}" oninput="state.searchQuery=this.value;renderJobDetail(${id})">
+          <button class="btn btn-primary btn-sm" onclick="openNewCandidate(${job.id})"><i class="ti ti-user-plus"></i> Add applicant</button>
+        </div>
+      </div>
+      ${appRows||'<div class="empty-state"><i class="ti ti-users"></i><p>No applicants yet.</p></div>'}
+      ${removedHTML}
+    </div>
+  </div>`;
+}
+function appCardHTML(a,isRemoved){
+  const sk=STAGE_KEY[a.status]||'new';
+  const src=a.source?`<span class="via-label">via ${a.source}</span>`:'';
+  return`<div class="applicant-item${isRemoved?' is-removed':''}">
+    <div class="applicant-row" onclick="openCandidate(${a.id})">
+      <div class="avatar${isRemoved?' av-removed':''}">${initials(a.name)}</div>
+      <div class="applicant-info">
+        <div class="applicant-name">${a.name}</div>
+        <div class="applicant-sub">${[a.email&&a.email!='N/A'?a.email:'',a.applied_date?'Applied '+fmtDate(a.applied_date):''].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div class="app-right">${src}${isRemoved?'<span class="badge b-removed">Removed</span>':`<span class="badge b-${sk}">${a.status}</span>`}<i class="ti ti-chevron-right" style="color:var(--text-secondary);font-size:13px;"></i></div>
+    </div>
+  </div>`;
+}
+function changeJobStatus(id,val){const j=state.jobs.find(j=>j.id==id);if(j){j.status=val;saveState();render();}}
+function findApp(appId){for(const arr of Object.values(state.applicants)){const a=arr.find(x=>x.id==appId);if(a)return a;}return null;}
+function openCandidate(appId){
+  const app=findApp(appId);if(!app)return;
+  const isRemoved=app.status==='Removed';
+  const log=(app.change_log||[]);
+  const logHTML=log.length?log.slice().reverse().map(e=>`<div class="change-log-entry">${e}</div>`).join(''):'<span style="color:var(--text-hint)">No changes recorded yet.</span>';
+  const resumeHTML=app.resume_file&&app.resume_file!=='{}'
+    ?`<div class="resume-attached"><i class="ti ti-file-text" style="font-size:16px;color:var(--text-secondary);"></i><a href="${app.resume_file}" target="_blank">${app.resume_name||'View resume'}</a><button class="btn btn-sm btn-danger" onclick="removeResume(${app.id})" style="padding:2px 8px;"><i class="ti ti-x"></i></button></div>`
+    :`<div class="resume-zone" onclick="triggerResume(${app.id})"><i class="ti ti-upload" style="font-size:20px;display:block;margin-bottom:4px;"></i>Click to attach resume</div>`;
+  const stagePills=STAGES.map(s=>{const k=s.replace(' ','-');return`<button class="stage-pill sp-${k}${app.status===s?' active':''}" onclick="clickStage(${app.id},'${s}')">${s}</button>`;}).join('');
+  showModal(`
+    <div class="cand-header">
+      <div class="cand-avatar-lg">${initials(app.name)}</div>
+      <div><div style="font-size:17px;font-weight:600;">${app.name}</div><div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">Applied ${fmtDate(app.applied_date)||'—'}</div></div>
+    </div>
+    <div class="contact-grid">
+      ${app.phone?`<div class="contact-item"><i class="ti ti-phone" style="font-size:14px;"></i> ${app.phone}</div>`:''}
+      ${app.email&&app.email!='N/A'?`<div class="contact-item"><i class="ti ti-mail" style="font-size:14px;"></i> <a href="mailto:${app.email}">${app.email}</a></div>`:''}
+    </div>
+    ${resumeHTML}
+    <input type="file" id="res-${app.id}" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg" onchange="handleResume(${app.id},this)">
+    <div class="form-group"><label>How they applied / source</label><select id="cd-src-${app.id}">${SOURCE_OPTIONS.map(s=>`<option${s===app.source?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Pipeline stage</label><div class="stage-pills-wrap">${stagePills}</div></div>
+    <div class="form-group"><label>Notes</label><textarea rows="3" id="cd-notes-${app.id}">${app.notes||''}</textarea></div>
+    <div class="form-group"><label>Stage change log</label><div class="change-log-list">${logHTML}</div></div>
+  `,app.name,[
+    {label:'Save',primary:true,action:`saveCandidate(${app.id})`},
+    isRemoved?{label:'Restore',action:`restoreCandidate(${app.id})`}:{label:'Remove from list',action:`markRemoved(${app.id})`},
+    {label:'Delete candidate',danger:true,action:`deleteCandidate(${app.id})`}
+  ]);
+}
+function clickStage(appId,newStage){
+  if(newStage==='Removed'){markRemoved(appId);return;}
+  const name=prompt(`Who is making this change to "${newStage}"?\nYour name will be logged.`);
+  if(name===null)return;
+  const app=findApp(appId);if(!app)return;
+  const prev=app.status;app.status=newStage;
+  if(!app.change_log)app.change_log=[];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: ${prev} → ${newStage}`);
+  saveState();closeModal();openCandidate(appId);
+}
+function markRemoved(appId){
+  const name=prompt('Who is removing this candidate?\nThey will be shaded red but NOT deleted — use "Delete candidate" to permanently remove.');
+  if(name===null)return;
+  const app=findApp(appId);if(!app)return;
+  const prev=app.status;app.status='Removed';
+  if(!app.change_log)app.change_log=[];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: removed (was ${prev})`);
+  saveState();closeModal();renderJobDetail(state.selectedJobId);
+}
+function restoreCandidate(appId){
+  const name=prompt('Who is restoring this candidate?');if(name===null)return;
+  const app=findApp(appId);if(!app)return;
+  app.status='New';
+  if(!app.change_log)app.change_log=[];
+  app.change_log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${name.trim()||'Unknown'}: restored → New`);
+  saveState();closeModal();renderJobDetail(state.selectedJobId);
+}
+function deleteCandidate(appId){
+  if(!confirm('Permanently delete this candidate? This CANNOT be undone.'))return;
+  for(const[k,arr]of Object.entries(state.applicants)){const i=arr.findIndex(x=>x.id==appId);if(i>=0){arr.splice(i,1);saveState();closeModal();renderJobDetail(state.selectedJobId);renderStats();return;}}
+}
+function saveCandidate(appId){
+  const app=findApp(appId);if(!app)return;
+  app.notes=document.getElementById('cd-notes-'+appId)?.value||'';
+  app.source=document.getElementById('cd-src-'+appId)?.value||'';
+  saveState();closeModal();renderJobDetail(state.selectedJobId);
+}
+function removeResume(appId){const app=findApp(appId);if(app){app.resume_name='';app.resume_file=null;saveState();closeModal();openCandidate(appId);}}
+function triggerResume(id){document.getElementById('res-'+id)?.click();}
+function handleResume(appId,input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{const app=findApp(appId);if(app){app.resume_name=file.name;app.resume_file=e.target.result;saveState();closeModal();openCandidate(appId);}};
+  r.readAsDataURL(file);
+}
+function triggerPosting(id){document.getElementById('posting-'+id)?.click();}
+function handlePosting(jobId,input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{const j=state.jobs.find(x=>x.id==jobId);if(j){j.posting_name=file.name;j.posting_file=e.target.result;saveState();renderJobDetail(jobId);}};
+  r.readAsDataURL(file);
+}
+function removePosting(jobId){const j=state.jobs.find(x=>x.id==jobId);if(j){j.posting_name='';j.posting_file=null;saveState();renderJobDetail(jobId);}}
+function openNewCandidate(jobId){
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Full name *</label><input id="nc-name" type="text" placeholder="Jane Smith"></div><div class="form-group"><label>Phone</label><input id="nc-phone" type="text"></div></div>
+    <div class="form-group"><label>Email</label><input id="nc-email" type="email"></div>
+    <div class="form-row"><div class="form-group"><label>Applied date</label><input id="nc-date" type="date" value="${nowISO()}"></div><div class="form-group"><label>Stage</label><select id="nc-stage">${STAGES.filter(s=>s!=='Removed').map(s=>`<option>${s}</option>`).join('')}</select></div></div>
+    <div class="form-group"><label>Source / how they applied</label><select id="nc-src">${SOURCE_OPTIONS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Notes</label><textarea rows="3" id="nc-notes"></textarea></div>
+  `,'Add applicant',[{label:'Add applicant',primary:true,action:`submitNewCandidate(${jobId})`}]);
+}
+function submitNewCandidate(jobId){
+  const name=document.getElementById('nc-name')?.value?.trim();if(!name){alert('Name is required');return;}
+  const stage=document.getElementById('nc-stage')?.value||'New';
+  const log=[];
+  if(stage!=='New'){const who=prompt(`Adding at stage "${stage}" — your name for the log:`)||'Unknown';log.push(`${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} — ${who}: added at ${stage}`);}
+  const a={id:Date.now(),job_id:jobId,name,phone:document.getElementById('nc-phone')?.value||'',email:document.getElementById('nc-email')?.value||'',applied_date:document.getElementById('nc-date')?.value||'',status:stage,notes:document.getElementById('nc-notes')?.value||'',source:document.getElementById('nc-src')?.value||'',resume_name:'',resume_file:null,change_log:log};
+  if(!state.applicants[jobId])state.applicants[jobId]=[];
+  state.applicants[jobId].unshift(a);
+  saveState();closeModal();renderJobDetail(jobId);renderStats();
+}
+function openNewJob(){
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Job title *</label><input id="nj-title" type="text" placeholder="Survey Technician"></div><div class="form-group"><label>Openings needed</label><input id="nj-openings" type="number" min="1" value="1"></div></div>
+    <div class="form-row"><div class="form-group"><label>Department</label><input id="nj-dept" type="text" placeholder="Civil Survey"></div><div class="form-group"><label>Location</label><input id="nj-loc" type="text" placeholder="San Antonio"></div></div>
+    <div class="form-group"><label>Status</label><select id="nj-status">${JOB_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="nj-desc"></textarea></div>
+  `,'New position',[{label:'Create position',primary:true,action:'submitNewJob()'}]);
+}
+function submitNewJob(){
+  const title=document.getElementById('nj-title')?.value?.trim();if(!title){alert('Title is required');return;}
+  const j={id:Date.now(),title,department:document.getElementById('nj-dept')?.value||'',location:document.getElementById('nj-loc')?.value||'',status:document.getElementById('nj-status')?.value||'Open',description:document.getElementById('nj-desc')?.value||'',openings:parseInt(document.getElementById('nj-openings')?.value)||1,posting_name:'',posting_file:null};
+  state.jobs.unshift(j);saveState();closeModal();renderJobList();renderStats();
+}
+function openEditJob(id){
+  const j=state.jobs.find(x=>x.id==id);if(!j)return;
+  showModal(`
+    <div class="form-row"><div class="form-group"><label>Job title *</label><input id="ej-title" type="text" value="${j.title.replace(/"/g,'&quot;')}"></div><div class="form-group"><label>Openings needed</label><input id="ej-openings" type="number" min="1" value="${j.openings||1}"></div></div>
+    <div class="form-row"><div class="form-group"><label>Department</label><input id="ej-dept" type="text" value="${(j.department||'').replace(/"/g,'&quot;')}"></div><div class="form-group"><label>Location</label><input id="ej-loc" type="text" value="${(j.location||'').replace(/"/g,'&quot;')}"></div></div>
+    <div class="form-group"><label>Status</label><select id="ej-status">${JOB_STATUSES.map(s=>`<option${s===j.status?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="ej-desc">${j.description||''}</textarea></div>
+  `,'Edit position',[{label:'Save changes',primary:true,action:`submitEditJob(${id})`}]);
+}
+function submitEditJob(id){
+  const j=state.jobs.find(x=>x.id==id);if(!j)return;
+  j.title=document.getElementById('ej-title')?.value?.trim()||j.title;
+  j.department=document.getElementById('ej-dept')?.value||'';
+  j.location=document.getElementById('ej-loc')?.value||'';
+  j.status=document.getElementById('ej-status')?.value||j.status;
+  j.description=document.getElementById('ej-desc')?.value||'';
+  j.openings=parseInt(document.getElementById('ej-openings')?.value)||1;
+  saveState();closeModal();renderJobDetail(id);renderStats();
+}
+function deleteJob(id){
+  if(!confirm('Delete this position and all its applicants? This CANNOT be undone.'))return;
+  state.jobs=state.jobs.filter(j=>j.id!=id);delete state.applicants[id];
+  state.selectedJobId=null;saveState();render();
+}
+function exportData(){
+  const data=JSON.stringify({jobs:state.jobs,applicants:state.applicants},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`hiring-tracker-${nowISO()}.json`;a.click();
+  URL.revokeObjectURL(url);
+}
+function triggerImport(){document.getElementById('import-input').click();}
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!d.jobs||!d.applicants)throw new Error('Invalid');
+      if(confirm(`Import ${d.jobs.length} positions? This will replace all current data.`)){
+        state.jobs=d.jobs.map(j=>({openings:1,posting_name:'',posting_file:null,...j}));
+        state.applicants={};
+        for(const[k,arr]of Object.entries(d.applicants)){state.applicants[k]=arr.map(a=>({source:'',change_log:[],...a}));}
+        state.selectedJobId=null;saveState();render();toast('Imported successfully');
+      }
+    }catch{toast('Import failed — check the file format',true);}
+  };r.readAsText(file);input.value='';
+}
+function showModal(body,title,buttons=[]){
+  const leftBtns=buttons.filter(b=>b.danger||(!b.primary&&b.action)).map(b=>b.danger?`<button class="btn btn-danger btn-sm" onclick="${b.action}">${b.label}</button>`:`<button class="btn btn-sm" onclick="${b.action}">${b.label}</button>`).join('');
+  const rightBtns=buttons.filter(b=>b.primary).map(b=>`<button class="btn btn-primary btn-sm" onclick="${b.action}">${b.label}</button>`).join('');
+  document.getElementById('modal-root').innerHTML=`
+    <div class="overlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+        <h3>${title}</h3>${body}
+        <div class="modal-footer">
+          <div class="modal-footer-left">${leftBtns}<button class="btn btn-sm" onclick="closeModal()">Cancel</button></div>
+          <div class="modal-footer-right">${rightBtns}</div>
+        </div>
+      </div>
+    </div>`;
+}
+function closeModal(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-root').innerHTML='';}
+loadState();
+</script>
+</body>
+</html>
