@@ -1,0 +1,491 @@
+
+<h2 class="sr-only">Hiring tracker — manage job postings and applicants with resume uploads and pipeline stages</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); font-size: 14px; color: var(--color-text-primary); }
+.app { display: flex; height: 100vh; min-height: 600px; }
+.sidebar { width: 260px; min-width: 260px; border-right: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-header { padding: 16px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.sidebar-header h1 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+.btn-new-job { width: 100%; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--color-text-primary); }
+.btn-new-job:hover { background: var(--color-background-tertiary); }
+.jobs-list { flex: 1; overflow-y: auto; padding: 8px; }
+.job-item { padding: 10px 12px; border-radius: var(--border-radius-md); cursor: pointer; margin-bottom: 2px; border: 0.5px solid transparent; }
+.job-item:hover { background: var(--color-background-primary); border-color: var(--color-border-tertiary); }
+.job-item.active { background: var(--color-background-primary); border-color: var(--color-border-secondary); }
+.job-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.job-meta { font-size: 11px; color: var(--color-text-secondary); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.badge-open { background: #EAF3DE; color: #3B6D11; }
+.badge-filled { background: #E6F1FB; color: #185FA5; }
+.badge-closed { background: #F1EFE8; color: #5F5E5A; }
+.badge-onhold { background: #FAEEDA; color: #854F0B; }
+.badge-new { background: #EEEDFE; color: #534AB7; }
+.badge-screening { background: #FAEEDA; color: #854F0B; }
+.badge-interview { background: #E6F1FB; color: #185FA5; }
+.badge-offer { background: #E1F5EE; color: #0F6E56; }
+.badge-hired { background: #EAF3DE; color: #3B6D11; }
+.badge-rejected { background: #FCEBEB; color: #A32D2D; }
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.main-content { flex: 1; overflow-y: auto; padding: 24px; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: var(--color-text-secondary); gap: 12px; }
+.empty-state i { font-size: 40px; opacity: 0.3; }
+.job-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.job-header-left h2 { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+.job-header-left .meta { font-size: 13px; color: var(--color-text-secondary); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.job-header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { padding: 7px 14px; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: transparent; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-danger { color: var(--color-text-danger); border-color: var(--color-border-danger); }
+.btn-danger:hover { background: var(--color-background-danger); }
+.select-status { border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 10px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; }
+.desc-box { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 16px; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.6; }
+.pipeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pipeline-header h3 { font-size: 14px; font-weight: 500; }
+.search-box { border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 10px; font-size: 13px; width: 200px; background: var(--color-background-primary); color: var(--color-text-primary); }
+.stage-section { margin-bottom: 20px; }
+.stage-label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.stage-count { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 10px; padding: 1px 7px; font-size: 11px; color: var(--color-text-secondary); font-style: normal; text-transform: none; letter-spacing: 0; }
+.applicant-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
+.applicant-card:hover { border-color: var(--color-border-secondary); }
+.applicant-card-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.applicant-name { font-size: 14px; font-weight: 500; }
+.applicant-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.applicant-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.select-stage { border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 4px 8px; font-size: 12px; background: var(--color-background-secondary); color: var(--color-text-primary); cursor: pointer; }
+.overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; }
+.modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 24px; width: 540px; max-width: 95vw; max-height: 90vh; overflow-y: auto; border: 0.5px solid var(--color-border-secondary); position: relative; }
+.modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+.modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 20px; padding: 0; }
+.modal-close:hover { color: var(--color-text-primary); }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+.form-group textarea { resize: vertical; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 0.5px solid var(--color-border-tertiary); }
+.candidate-detail { padding: 0; }
+.candidate-detail .detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--color-background-info, #E6F1FB); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 15px; color: #185FA5; flex-shrink: 0; }
+.detail-contact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.contact-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-secondary); }
+.contact-item a { color: var(--color-text-info, #185FA5); text-decoration: none; }
+.contact-item a:hover { text-decoration: underline; }
+.resume-zone { border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 14px; text-align: center; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 14px; cursor: pointer; background: var(--color-background-secondary); }
+.resume-zone:hover { border-color: var(--color-border-primary); }
+.resume-attached { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); margin-bottom: 14px; font-size: 13px; }
+.resume-attached a { color: var(--color-text-info, #185FA5); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resume-attached a:hover { text-decoration: underline; }
+.import-banner { background: var(--color-background-success, #E1F5EE); border: 0.5px solid var(--color-border-success); border-radius: var(--border-radius-md); padding: 10px 14px; font-size: 13px; color: var(--color-text-success); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-open { background: #3B6D11; }
+.dot-filled { background: #185FA5; }
+.dot-closed { background: #888780; }
+.dot-onhold { background: #854F0B; }
+</style>
+
+<div class="app" id="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Hiring Tracker</h1>
+      <button class="btn-new-job" onclick="openNewJob()">
+        <i class="ti ti-plus" aria-hidden="true"></i> New job posting
+      </button>
+    </div>
+    <div class="jobs-list" id="jobs-list"></div>
+  </div>
+  <div class="main">
+    <div class="main-content" id="main-content">
+      <div class="empty-state">
+        <i class="ti ti-briefcase" aria-hidden="true"></i>
+        <p>Select a job to view candidates</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+const STAGES = ['New','Screening','Interview','Offer Sent','Hired','Rejected'];
+const JOB_STATUSES = ['Open','Filled','Closed','On Hold'];
+
+function stageBadge(s) {
+  const map = {New:'new',Screening:'screening',Interview:'interview','Offer Sent':'offer',Hired:'hired',Rejected:'rejected'};
+  return `<span class="badge badge-${map[s]||'new'}">${s}</span>`;
+}
+function jobBadge(s) {
+  const map = {Open:'open',Filled:'filled',Closed:'closed','On Hold':'onhold'};
+  return `<span class="badge badge-${map[s]||'closed'}">${s}</span>`;
+}
+function dotClass(s) {
+  const map = {Open:'open',Filled:'filled',Closed:'closed','On Hold':'onhold'};
+  return `dot dot-${map[s]||'closed'}`;
+}
+function initials(name) {
+  return (name||'?').trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+const SEED = {"jobs":[{"id":1778187870887,"title":"Party Chief","department":"Civil Survey","location":"San Antonio","status":"Open","description":"X2; 5+ years experience with civil market projects; 3+ years experience with residential market projects; 5+ years experience with total station and survey level instrumentation"},{"id":1778188035281,"title":"Instrument Technician","department":"Civil Survey","location":"San Antonio","status":"Open","description":"X2; Desirable: 3+ years of survey experience; Prior experience with Trimble Access; Prior experience with Trimble GNSS and total station equipment; Prior experience with SX10, SX12, X7, or X9 LiDAR scanning equipment"},{"id":1775085737333,"title":"Project Engineer","department":"Engineering","location":"San Antonio","status":"Open","description":"x1. 2-6 yr PE"},{"id":1775085222388,"title":"Project EIT","department":"Engineering","location":"San Antonio","status":"Open","description":"x1"},{"id":1775085188248,"title":"Civil CAD Technician","department":"Engineering","location":"San Antonio","status":"Open","description":"x1"},{"id":1775084008256,"title":"CAD Technician","department":"Civil Survey","location":"San Antonio","status":"Open","description":"x1. 3-10 years experience"},{"id":1775083896594,"title":"Instrument Technician","department":"Oil & Gas Survey","location":"Hobbs","status":"Open","description":"x1"},{"id":1775083870319,"title":"Party Chief","department":"Oil & Gas Survey","location":"Hobbs","status":"Open","description":"x1"},{"id":1775078928501,"title":"Project Manager (Upstream)","department":"Oil & Gas Survey","location":"Odessa","status":"Open","description":"x1"},{"id":1775078833639,"title":"CAD Technician (Midstream)","department":"Oil & Gas Survey","location":"San Antonio","status":"Open","description":"x2"},{"id":1775078754117,"title":"Cad Technician (Upstream)","department":"Oil & Gas Survey","location":"Odessa","status":"Open","description":"x1. 5-7 Years experience"},{"id":1775138575339,"title":"Drafting Coordinator","department":"Survey","location":"San Antonio","status":"Open","description":""}],"applicants":{"1775084008256":[{"id":1775141857100,"job_id":1775084008256,"name":"Josef Rusnak","email":"josefrrusnak@gmail.com","phone":"210.232.1693","applied_date":"2026-04-02","status":"New","notes":"\"Z:\\OFFICE\\00-RESUMES\\02-Surveying\\06-CAD Technician\\2026\\20260401_CAD Tech_SA_Josef Rusnak.pdf\"","resume_name":"","resume_file":null,"linked_in":"","cover_letter":""}],"1775078928501":[{"id":1775141878684,"job_id":1775078928501,"name":"Stephanie Barrera","email":"","phone":"","applied_date":"2026-04-02","status":"New","notes":"very strong candidate. currently at Kimley-Horn. Personal recommendation of Randy & Lenny","resume_name":"","resume_file":null,"linked_in":"","cover_letter":""}],"1775078833639":[{"id":1775142940568,"job_id":1775078833639,"name":"Christian Avila","email":"Christian.Avila1@hotmail.com","phone":"718.608.7665","applied_date":"2026-04-02","status":"New","notes":"civil tech that has survey experience. Could be used for either department","resume_name":"","resume_file":null,"linked_in":"","cover_letter":""},{"id":1775142962968,"job_id":1775078833639,"name":"Tina Rios","email":"tinaviolarios@gmail.com","phone":"","applied_date":"2026-04-02","status":"New","notes":"strong candidate. Recommended by Victor Retana.","resume_name":"","resume_file":null,"linked_in":"","cover_letter":""}],"1778188035281":[{"id":1778192665446,"job_id":1778188035281,"name":"Luis Torres","email":"Luisitotorres242@gmail.com","phone":"210-780-1194","applied_date":"2026-04-06","status":"New","notes":"Rodman experience + OSHA-10 + PEC","resume_name":"20260406_IT_SA_Luis Torres.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192664958-20260406_IT_SA_Luis%20Torres.pdf","linked_in":"","cover_letter":""},{"id":1778192819314,"job_id":1778188035281,"name":"James Ybarbo","email":"james500w211@icloud.com","phone":"210-501-2205","applied_date":"2026-04-02","status":"New","notes":"4 years I-tech experience at Pape Dawson","resume_name":"20260402_IT_SA_James Ybarbo.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192818755-20260402_IT_SA_James%20Ybarbo.pdf","linked_in":"","cover_letter":""},{"id":1778193020312,"job_id":1778188035281,"name":"Preston Norris","email":"prestonphillip007@gmail.com","phone":"9032024155","applied_date":"2026-02-20","status":"New","notes":"Few years field experience","resume_name":"20260220_IT_SA_Preston Norris.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778193019757-20260220_IT_SA_Preston%20Norris.pdf","linked_in":"","cover_letter":""},{"id":1778192430677,"job_id":1778188035281,"name":"Alejandro San Miguel","email":"9910alex@gmail.com","phone":"956-285-7168","applied_date":"2026-04-23","status":"New","notes":"Skills look CAD-tech related","resume_name":"20260423_IT_SA_Alejandro Miguel.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192430109-20260423_IT_SA_Alejandro%20Miguel.pdf","linked_in":"","cover_letter":""},{"id":1778192529428,"job_id":1778188035281,"name":"Damien Garcia Medina","email":"damien.garciamedina@my.utsa.edu","phone":"210-797-1203","applied_date":"2026-04-18","status":"New","notes":"Studying Civil Engineering at UTSA","resume_name":"20260418_IT_SA_Damien Medina.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192528985-20260418_IT_SA_Damien%20Medina.pdf","linked_in":"","cover_letter":""},{"id":1778262856713,"job_id":1778188035281,"name":"Anthony Estrada","email":"anthonyc_estrada@yahoo.com","phone":"1-726-239-8565","applied_date":"2026-05-08","status":"New","notes":"Title surveys, boundary, tree, level loops, as-builds, ALTA, topo and line work","resume_name":"20260508_IT_SA_AnthonyEstrada.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778265303057-20260508_IT_SA_AnthonyEstrada.pdf","linked_in":"","cover_letter":""},{"id":1778192929069,"job_id":1778188035281,"name":"Diego Silva","email":"silvadie000@gmail.com","phone":"956-655-0874","applied_date":"2026-03-02","status":"Rejected","notes":"Several years Party Chief + CAD tech experience; sent application on 3/17/26, no response","resume_name":"20260302_IT_SA_Diego Silva.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778192928625-20260302_IT_SA_Diego%20Silva.pdf","linked_in":"","cover_letter":""},{"id":1778508848920,"job_id":1778188035281,"name":"Jasper Carbajal","email":"jaspercarbazal5_zp2@indeedemail.com","phone":"1-361-935-6420","applied_date":"2026-05-09","status":"New","notes":"","resume_name":"","resume_file":null,"linked_in":"Indeed","cover_letter":""},{"id":1778509296876,"job_id":1778188035281,"name":"Nicole Roman Anguiano","email":"Lbd57@txstate.edu","phone":"1-210-906-9106","applied_date":"2026-05-09","status":"New","notes":"Army Veteran with Ph.D. in Geography and Master of Applied Geography","resume_name":"20260509_IT_SA_Nicole Roman Anguiano.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778509295204-20260509_IT_SA_Nicole%20Roman%20Anguiano.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778509960944,"job_id":1778188035281,"name":"Ruben Escamilla","email":"rubenvescamilla@outlook.com","phone":"1-210-365-7899","applied_date":"2026-05-11","status":"New","notes":"","resume_name":"220260510_IT_SA_Ruben Escamilla.docx","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778509960129-220260510_IT_SA_Ruben%20Escamilla.docx","linked_in":"Indeed","cover_letter":""},{"id":1778511338836,"job_id":1778188035281,"name":"Blake Luke","email":"N/A","phone":"1-832-622-9090","applied_date":"2026-05-11","status":"New","notes":"Experience in all facets of pipeline survey","resume_name":"20260509_IT_SA_Blake Luke.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778511336958-20260509_IT_SA_Blake%20Luke.pdf","linked_in":"","cover_letter":""},{"id":1778512156936,"job_id":1778188035281,"name":"Andrew Landa","email":"andrewlanda24@gmail.com","phone":"1-956-655-6353","applied_date":"2026-05-11","status":"New","notes":"Is currently employed by Encompass Services as an I Man","resume_name":"20260510_IT_SA_Andrew Landa.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778512155307-20260510_IT_SA_Andrew%20Landa.pdf","linked_in":"","cover_letter":""},{"id":1778600243079,"job_id":1778188035281,"name":"David Hilton","email":"da_hilton@hotmail.com","phone":"1-830-968-8828","applied_date":"2026-05-12","status":"New","notes":"Highly skilled CAD technician with 9+ years experience.","resume_name":"20260511_IT_SA_David Hilton.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778600239793-20260511_IT_SA_David%20Hilton.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778600727337,"job_id":1778188035281,"name":"Mauricio Becerril","email":"maurobanks@@gmail.com","phone":"+52 553-295-3043","applied_date":"2026-05-12","status":"New","notes":"Civil Engineer from UNAM with 12+ years experience in the land transportation sector.","resume_name":"20260511_IT_SA_Mauricio Becerril.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778600726057-20260511_IT_SA_Mauricio%20Becerril.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778680097496,"job_id":1778188035281,"name":"Joseph Casares","email":"josephcascres39@gmail.com","phone":"1-210-274-2413","applied_date":"2026-05-13","status":"New","notes":"Entry level Instrument Technician","resume_name":"20260512_IT_SA_Joseph Casares.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778680096313-20260512_IT_SA_Joseph%20Casares.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778686935293,"job_id":1778188035281,"name":"Ricardo Ley","email":"ricdimus@hotmail.com","phone":"","applied_date":"2026-05-13","status":"New","notes":"Extensive Experience","resume_name":"20260513_IT_SA_Ricardo Ley.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778686932798-20260513_IT_SA_Ricardo%20Ley.pdf","linked_in":"Personal entry","cover_letter":""},{"id":1778690594864,"job_id":1778188035281,"name":"Marah McCranie","email":"hunterrebel6@gmail.com","phone":"1-318-594-701","applied_date":"2026-05-13","status":"New","notes":"Minimal IT experience, Swamper in the Oil Field","resume_name":"20260513_IT_SA_Marah McCranie.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778690594015-20260513_IT_SA_Marah%20McCranie.pdf","linked_in":"","cover_letter":""},{"id":1778511065025,"job_id":1778188035281,"name":"Carlos Ayon","email":"carlos.ayon1990@gmail.com","phone":"1-805-228-9914","applied_date":"2026-05-09","status":"Hired","notes":"No survey experience","resume_name":"20260509_IT_SA_Carlos Ayon.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778511063252-20260509_IT_SA_Carlos%20Ayon.pdf","linked_in":"","cover_letter":""},{"id":1778692510896,"job_id":1778188035281,"name":"Sebastian Cabrales","email":"sebcabrales23@gmail.com","phone":"1-214-609-9170","applied_date":"2026-05-13","status":"New","notes":"Minimal experience","resume_name":"20260513_IT_SA_Sebastian Cabrales.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778692509561-20260513_IT_SA_Sebastian%20Cabrales.pdf","linked_in":"","cover_letter":""},{"id":1779216788894,"job_id":1778188035281,"name":"Nicholas Ortiz","email":"matthew386839_9t3@indeedemail.com","phone":"1+210-718-4097","applied_date":"2026-05-19","status":"New","notes":"Currently working in Midland, Tx. No surveying experience","resume_name":"20260517_IT_SA_Nicholas Ortiz.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779216787828-20260517_IT_SA_Nicholas%20Ortiz.pdf","linked_in":"Indeed","cover_letter":""},{"id":1779217575069,"job_id":1778188035281,"name":"Jimi Hammerbacher","email":"jimihammerbacher8_2qb@indeedemail.com","phone":"1-832-844-7650","applied_date":"2026-05-19","status":"New","notes":"7 yrs experience, currently in OK City working as a Hi Flow Tech","resume_name":"20260516_IT_SA_Jimi Hammerbacher.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779217573685-20260516_IT_SA_Jimi%20Hammerbacher.pdf","linked_in":"Indeed","cover_letter":""},{"id":1779220256449,"job_id":1778188035281,"name":"Adam Salmi","email":"agsalmi96@gmail.com","phone":"755-351-5543","applied_date":"2026-05-19","status":"New","notes":"No experience in surveying","resume_name":"20260517_IT_SA_Adam Salmi.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779220255163-20260517_IT_SA_Adam%20Salmi.pdf","linked_in":"Indeed","cover_letter":""},{"id":1779220577735,"job_id":1778188035281,"name":"Devin Moore","email":"Swavvey26@gmail.com","phone":"210-461-7688","applied_date":"2026-05-19","status":"New","notes":"Minimal experience working for DNT Construction.","resume_name":"20260518_IT_SA_Devin Moore.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779220576498-20260518_IT_SA_Devin%20Moore.pdf","linked_in":"Indeed","cover_letter":""},{"id":1779220952071,"job_id":1778188035281,"name":"Daniel Christensen","email":"dchristensen928@gmail.com","phone":"307-522-8462","applied_date":"2026-05-19","status":"New","notes":"No survey experience. Owns his own business Reliable Shearing.","resume_name":"20260518_IT_SA_Daniel Christensen.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779220950962-20260518_IT_SA_Daniel%20Christensen.pdf","linked_in":"Indeed","cover_letter":""}],"1778187870887":[{"id":1779285641183,"job_id":1778187870887,"name":"William Cruse","email":"cruwil97@gmail.com","phone":"210-380-9345","applied_date":"2026-05-20","status":"New","notes":"Highly experienced, relocated to SA","resume_name":"20260518_PC_SA_William Cruse.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779285640119-20260518_PC_SA_William%20Cruse.pdf","linked_in":"Careers","cover_letter":""},{"id":1779468603504,"job_id":1778187870887,"name":"Marc Reyes","email":"marc.reyes830@gmail.com","phone":"210-857-1354","applied_date":"2026-05-22","status":"New","notes":"Currently serving as Party Chief for Precision Surveyors since 2023","resume_name":"20260521_PC_SA_Marc Reyes.png","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779468599086-20260521_PC_SA_Marc%20Reyes.png","linked_in":"","cover_letter":""},{"id":1779816970026,"job_id":1778187870887,"name":"Triston Dawson","email":"triston.daws@gmail.com","phone":"815-985-7939","applied_date":"2026-05-26","status":"New","notes":"Military - Air National Guard 2023 - Present","resume_name":"20260525_IT_SA_Triston Dawson.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1779816969216-20260525_IT_SA_Triston%20Dawson.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778689072512,"job_id":1778187870887,"name":"Esteban Hinojosa","email":"steviehinojosa2000@gmail.com","phone":"1-361-226-2887","applied_date":"2026-05-13","status":"Rejected","notes":"Experienced Party Chief with a Bachelor in Geospatial Information Science. Sent offer letter; Mr. Hinojosa found employment elsewhere.","resume_name":"20260512_PC_SA_Esteban Hinojosa.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778689070617-20260512_PC_SA_Esteban%20Hinojosa.pdf","linked_in":"","cover_letter":""},{"id":1780065819512,"job_id":1778187870887,"name":"Dennis E. Garcia","email":"","phone":"","applied_date":"2026-05-29","status":"New","notes":"Experience with drone operation","resume_name":"20260528_PC_SA_Dennis Garcia.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780065817246-20260528_PC_SA_Dennis%20Garcia.pdf","linked_in":"","cover_letter":""},{"id":1780344036431,"job_id":1778187870887,"name":"Charles Patrick Nichols Jr.","email":"cpat2005@gmail.com","phone":"601-230-8888","applied_date":"2026-06-01","status":"New","notes":"18+ years of experience. Worked for HGA as party chief till laid off in April. His I-Man is applying also (Eleina Nichols).","resume_name":"20260601_PC_SA_Charles Nichols Jr.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780344035254-20260601_PC_SA_Charles%20Nichols,%20Jr...pdf","linked_in":"","cover_letter":""},{"id":1780346332601,"job_id":1778187870887,"name":"Nicholas Hernandez","email":"nicholashernandez299_6ey@indeedemail.com","phone":"+1 210 505 0123","applied_date":"2026-06-01","status":"New","notes":"Experience I-man wanting to expand into a Party Chief role. Willing to relocate anywhere.","resume_name":"20260601_PC_SA_Nicholas Hernandez.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780346331600-20260601_PC_SA_Nicholas%20Hernandez.pdf","linked_in":"Indeed","cover_letter":""},{"id":1778858712074,"job_id":1778187870887,"name":"Andres Leal","email":"aleal1128@outlook.com","phone":"1-210-954-2226","applied_date":"2026-05-15","status":"Screening","notes":"12 years experience in surveying","resume_name":"20260514_PC_SA_Andres Leal.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1778858711099-20260514_PC_SA_Andres%20Leal.pdf","linked_in":"Indeed","cover_letter":""},{"id":1780317392323,"job_id":1778187870887,"name":"Ian Scott Mclaggan","email":"ianscott1185@gmail.com","phone":"","applied_date":"2026-05-29","status":"Screening","notes":"Experience and willing to relocate","resume_name":"20260402_PC_SA_Scott McLaggan.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780317389569-20260402_PC_SA_Scott%20McLaggan.pdf","linked_in":"Indeed","cover_letter":""},{"id":1780935027857,"job_id":1778187870887,"name":"Nicholas Mendoza","email":"nick.mend80@gmail","phone":"469-380-9802","applied_date":"2026-06-08","status":"New","notes":"Experienced Party Chief. Survey CAD Tech (Kiewit).","resume_name":"20260601_PC_SA_Nichols Mendoza.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780935026648-20260601_PC_SA_Nichols%20Mendoza.pdf","linked_in":"","cover_letter":""},{"id":1780935149402,"job_id":1778187870887,"name":"Juan Miguel Garcia Bernal","email":"juan.96038@gmail.com","phone":"210-782-5801","applied_date":"2026-06-08","status":"New","notes":"10+ years of survey experience.","resume_name":"20260601_PC_SA_Juan Bernal.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780935148337-20260601_PC_SA_Juan%20Bernal.pdf","linked_in":"","cover_letter":""},{"id":1780935373955,"job_id":1778187870887,"name":"Ernest Hudson","email":"ernesthudson26_u29@","phone":"1-210-799-2949","applied_date":"2026-06-08","status":"New","notes":"10+ years survey experience currently serving as Party Chief for Maverick Land Surveying","resume_name":"20260601_PC_SA_Ernest Hudson.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780935373087-20260601_PC_SA_Ernest%20Hudson.pdf","linked_in":"","cover_letter":""},{"id":1780939441024,"job_id":1778187870887,"name":"Jesus Luna","email":"jllunajesus@gmail.com","phone":"9562401684","applied_date":"2026-06-08","status":"New","notes":"9+ years of experience. SUAS Part 107 Remote Pilot. Impressive.","resume_name":"20260607_PC_SA_Jesus Luna.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780939438208-20260607_PC_SA_Jesus%20Luna.pdf","linked_in":"","cover_letter":""},{"id":1780940238383,"job_id":1778187870887,"name":"Rene Cruz","email":"renec6667@gmail.com","phone":"956-333-9975","applied_date":"2026-06-08","status":"New","notes":"Survey experience. OSHA 10 certified.","resume_name":"20260604_PC_SA_Rene Cruz.pdf","resume_file":"https://zjuvstnqvxkycatdpjnd.supabase.co/storage/v1/object/public/resumes/1780940236970-20260604_PC_SA_Rene%20Cruz.pdf","linked_in":"","cover_letter":""}],"1775085188248":[{"id":1775141816901,"job_id":1775085188248,"name":"Mynor Velasquez","email":"v4mynor@gmail.com","phone":"210.268.8885","applied_date":"2026-04-02","status":"New","notes":"","resume_name":"","resume_file":null,"linked_in":"","cover_letter":""}]}};
+
+let state = { jobs: [], applicants: {}, selectedJobId: null, searchQuery: '' };
+
+async function loadState() {
+  try {
+    const r = await window.storage.get('hiring_data');
+    if (r && r.value) {
+      const d = JSON.parse(r.value);
+      state.jobs = d.jobs || [];
+      state.applicants = d.applicants || {};
+    } else {
+      state.jobs = SEED.jobs;
+      state.applicants = SEED.applicants;
+      await saveState(true);
+    }
+  } catch(e) {
+    state.jobs = SEED.jobs;
+    state.applicants = SEED.applicants;
+  }
+  render();
+}
+
+async function saveState(silent) {
+  try {
+    await window.storage.set('hiring_data', JSON.stringify({jobs: state.jobs, applicants: state.applicants}));
+    if (!silent) showToast('Saved');
+  } catch(e) { showToast('Save failed', true); }
+}
+
+function showToast(msg, err) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:20px;right:20px;background:${err?'var(--color-background-danger)':'var(--color-text-primary)'};color:${err?'var(--color-text-danger)':'var(--color-background-primary)'};padding:8px 16px;border-radius:var(--border-radius-md);font-size:13px;z-index:999;`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2000);
+}
+
+function render() {
+  renderSidebar();
+  if (state.selectedJobId) renderJob(state.selectedJobId);
+}
+
+function renderSidebar() {
+  const el = document.getElementById('jobs-list');
+  el.innerHTML = state.jobs.map(j => {
+    const count = (state.applicants[j.id] || []).length;
+    const active = state.selectedJobId == j.id ? ' active' : '';
+    return `<div class="job-item${active}" onclick="selectJob(${j.id})">
+      <div class="job-title">${j.title}</div>
+      <div class="job-meta">
+        <span class="${dotClass(j.status)}"></span>
+        <span>${j.department}</span>
+        <span>·</span>
+        <span>${j.location}</span>
+        ${count > 0 ? `<span>· ${count} applicant${count!==1?'s':''}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectJob(id) {
+  state.selectedJobId = id;
+  state.searchQuery = '';
+  renderSidebar();
+  renderJob(id);
+}
+
+function renderJob(id) {
+  const job = state.jobs.find(j=>j.id==id);
+  if (!job) return;
+  const applicants = state.applicants[id] || [];
+  const q = state.searchQuery.toLowerCase();
+  const filtered = q ? applicants.filter(a=>a.name.toLowerCase().includes(q)||a.email.toLowerCase().includes(q)||(a.notes||'').toLowerCase().includes(q)) : applicants;
+  
+  const grouped = {};
+  STAGES.forEach(s=>grouped[s]=[]);
+  filtered.forEach(a=>{ const s = STAGES.includes(a.status)?a.status:'New'; grouped[s].push(a); });
+
+  const stageHTML = STAGES.map(stage => {
+    const list = grouped[stage];
+    if (!list.length) return '';
+    return `<div class="stage-section">
+      <div class="stage-label">${stage} <em class="stage-count">${list.length}</em></div>
+      ${list.map(a => `<div class="applicant-card" onclick="openCandidate(${a.id})">
+        <div class="applicant-card-row">
+          <div>
+            <div class="applicant-name">${a.name}</div>
+            <div class="applicant-sub">${[a.phone||'', a.applied_date ? 'Applied '+a.applied_date : ''].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div class="applicant-actions" onclick="event.stopPropagation()">
+            ${a.resume_file ? `<a href="${a.resume_file}" target="_blank" title="View resume" style="color:var(--color-text-secondary);font-size:16px;"><i class="ti ti-file-text" aria-hidden="true"></i></a>` : ''}
+            <select class="select-stage" onchange="changeStage(${a.id},this.value)">
+              ${STAGES.map(s=>`<option${s===a.status?' selected':''}>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="job-header">
+      <div class="job-header-left">
+        <h2>${job.title}</h2>
+        <div class="meta">
+          <span>${job.department}</span>
+          <span>·</span>
+          <span>${job.location}</span>
+          <span>·</span>
+          ${jobBadge(job.status)}
+          <span>· ${applicants.length} applicant${applicants.length!==1?'s':''}</span>
+        </div>
+      </div>
+      <div class="job-header-right">
+        <select class="select-status" onchange="changeJobStatus(${job.id},this.value)">
+          ${JOB_STATUSES.map(s=>`<option${s===job.status?' selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn" onclick="openEditJob(${job.id})"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>
+        <button class="btn btn-primary" onclick="openNewCandidate(${job.id})"><i class="ti ti-user-plus" aria-hidden="true"></i> Add candidate</button>
+      </div>
+    </div>
+    ${job.description ? `<div class="desc-box">${job.description}</div>` : ''}
+    <div class="pipeline-header">
+      <h3>Candidates</h3>
+      <input class="search-box" type="text" placeholder="Search candidates…" value="${state.searchQuery}" oninput="searchCandidates(this.value)">
+    </div>
+    ${stageHTML || '<p style="color:var(--color-text-secondary);font-size:13px;padding:20px 0;">No candidates yet.</p>'}
+  `;
+}
+
+function searchCandidates(q) {
+  state.searchQuery = q;
+  renderJob(state.selectedJobId);
+}
+
+function changeJobStatus(id, val) {
+  const j = state.jobs.find(j=>j.id==id);
+  if (j) { j.status = val; saveState(); renderSidebar(); renderJob(id); }
+}
+
+function changeStage(appId, val) {
+  for (const arr of Object.values(state.applicants)) {
+    const a = arr.find(x=>x.id==appId);
+    if (a) { a.status = val; saveState(); renderJob(state.selectedJobId); return; }
+  }
+}
+
+function openCandidate(appId) {
+  let applicant = null;
+  for (const arr of Object.values(state.applicants)) {
+    const a = arr.find(x=>x.id==appId);
+    if (a) { applicant = a; break; }
+  }
+  if (!applicant) return;
+
+  const init = initials(applicant.name);
+  showModal(`
+    <div class="candidate-detail">
+      <div class="detail-header">
+        <div class="avatar">${init}</div>
+        <div>
+          <div style="font-size:17px;font-weight:500;">${applicant.name}</div>
+          <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px;">Applied ${applicant.applied_date||'—'} · ${stageBadge(applicant.status)}</div>
+        </div>
+      </div>
+      <div class="detail-contact">
+        ${applicant.phone ? `<div class="contact-item"><i class="ti ti-phone" aria-hidden="true" style="font-size:15px;"></i> ${applicant.phone}</div>` : ''}
+        ${applicant.email && applicant.email!='N/A' ? `<div class="contact-item"><i class="ti ti-mail" aria-hidden="true" style="font-size:15px;"></i> <a href="mailto:${applicant.email}">${applicant.email}</a></div>` : ''}
+        ${applicant.linked_in && !['','Indeed','Careers','Personal entry'].includes(applicant.linked_in) ? `<div class="contact-item"><i class="ti ti-brand-linkedin" aria-hidden="true" style="font-size:15px;"></i> <a href="${applicant.linked_in}" target="_blank">LinkedIn</a></div>` : ''}
+        ${applicant.linked_in && ['Indeed','Careers','Personal entry'].includes(applicant.linked_in) ? `<div class="contact-item"><i class="ti ti-link" aria-hidden="true" style="font-size:15px;"></i> ${applicant.linked_in}</div>` : ''}
+      </div>
+      ${applicant.resume_file
+        ? `<div class="resume-attached"><i class="ti ti-file-text" aria-hidden="true" style="font-size:18px;color:var(--color-text-secondary);"></i><a href="${applicant.resume_file}" target="_blank">${applicant.resume_name||'View resume'}</a><button class="btn btn-danger" style="padding:4px 8px;font-size:12px;" onclick="removeResume(${applicant.id})"><i class="ti ti-x" aria-hidden="true"></i></button></div>`
+        : `<div class="resume-zone" onclick="triggerResumeUpload(${applicant.id})"><i class="ti ti-upload" aria-hidden="true" style="font-size:20px;display:block;margin-bottom:6px;"></i>Click to attach resume (PDF, DOC, PNG)</div>`
+      }
+      <input type="file" id="file-input-${applicant.id}" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg" onchange="handleResumeUpload(${applicant.id}, this)">
+      <div class="form-group">
+        <label>Pipeline stage</label>
+        <select onchange="changeStage(${applicant.id},this.value)" style="width:100%">
+          ${STAGES.map(s=>`<option${s===applicant.status?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea rows="4" id="notes-${applicant.id}" style="width:100%">${applicant.notes||''}</textarea>
+      </div>
+    </div>
+  `, 'Candidate detail', [
+    {label:'Save notes', primary:true, action:`saveNotes(${applicant.id})`},
+    {label:'Delete', danger:true, action:`deleteCandidate(${applicant.id})`}
+  ]);
+}
+
+function triggerResumeUpload(id) {
+  document.getElementById('file-input-'+id)?.click();
+}
+
+function handleResumeUpload(appId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    for (const arr of Object.values(state.applicants)) {
+      const a = arr.find(x=>x.id==appId);
+      if (a) {
+        a.resume_name = file.name;
+        a.resume_file = e.target.result;
+        saveState();
+        closeModal();
+        openCandidate(appId);
+        return;
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeResume(appId) {
+  for (const arr of Object.values(state.applicants)) {
+    const a = arr.find(x=>x.id==appId);
+    if (a) { a.resume_name=''; a.resume_file=null; saveState(); closeModal(); openCandidate(appId); return; }
+  }
+}
+
+function saveNotes(appId) {
+  const val = document.getElementById('notes-'+appId)?.value;
+  for (const arr of Object.values(state.applicants)) {
+    const a = arr.find(x=>x.id==appId);
+    if (a) { a.notes = val; saveState(); closeModal(); renderJob(state.selectedJobId); return; }
+  }
+}
+
+function deleteCandidate(appId) {
+  if (!confirm('Remove this candidate?')) return;
+  for (const [key, arr] of Object.entries(state.applicants)) {
+    const idx = arr.findIndex(x=>x.id==appId);
+    if (idx>=0) { arr.splice(idx,1); saveState(); closeModal(); renderJob(state.selectedJobId); renderSidebar(); return; }
+  }
+}
+
+function openNewCandidate(jobId) {
+  showModal(`
+    <div class="form-row"><div class="form-group" style="margin-bottom:0"><label>Full name *</label><input type="text" id="nc-name" placeholder="Jane Smith"></div><div class="form-group" style="margin-bottom:0"><label>Phone</label><input type="text" id="nc-phone" placeholder="210-555-0100"></div></div>
+    <div class="form-group"><label>Email</label><input type="email" id="nc-email" placeholder="jane@example.com"></div>
+    <div class="form-group"><label>Applied date</label><input type="date" id="nc-date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div class="form-group"><label>Pipeline stage</label><select id="nc-stage">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Notes</label><textarea rows="3" id="nc-notes"></textarea></div>
+  `, 'Add candidate', [{label:'Add candidate', primary:true, action:`submitNewCandidate(${jobId})`}]);
+}
+
+function submitNewCandidate(jobId) {
+  const name = document.getElementById('nc-name')?.value?.trim();
+  if (!name) { alert('Name is required'); return; }
+  const a = {
+    id: Date.now(), job_id: jobId,
+    name, phone: document.getElementById('nc-phone')?.value||'',
+    email: document.getElementById('nc-email')?.value||'',
+    applied_date: document.getElementById('nc-date')?.value||'',
+    status: document.getElementById('nc-stage')?.value||'New',
+    notes: document.getElementById('nc-notes')?.value||'',
+    resume_name:'', resume_file:null, linked_in:'', cover_letter:''
+  };
+  if (!state.applicants[jobId]) state.applicants[jobId] = [];
+  state.applicants[jobId].unshift(a);
+  saveState();
+  closeModal();
+  renderJob(jobId);
+  renderSidebar();
+}
+
+function openNewJob() {
+  showModal(`
+    <div class="form-row"><div class="form-group" style="margin-bottom:0"><label>Job title *</label><input type="text" id="nj-title" placeholder="Survey Technician"></div><div class="form-group" style="margin-bottom:0"><label>Department</label><input type="text" id="nj-dept" placeholder="Civil Survey"></div></div>
+    <div class="form-row"><div class="form-group" style="margin-bottom:0"><label>Location</label><input type="text" id="nj-loc" placeholder="San Antonio"></div><div class="form-group" style="margin-bottom:0"><label>Status</label><select id="nj-status">${JOB_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="nj-desc"></textarea></div>
+  `, 'New job posting', [{label:'Create posting', primary:true, action:'submitNewJob()'}]);
+}
+
+function submitNewJob() {
+  const title = document.getElementById('nj-title')?.value?.trim();
+  if (!title) { alert('Title is required'); return; }
+  const j = {
+    id: Date.now(), title,
+    department: document.getElementById('nj-dept')?.value||'',
+    location: document.getElementById('nj-loc')?.value||'',
+    status: document.getElementById('nj-status')?.value||'Open',
+    description: document.getElementById('nj-desc')?.value||''
+  };
+  state.jobs.unshift(j);
+  saveState();
+  closeModal();
+  selectJob(j.id);
+}
+
+function openEditJob(id) {
+  const j = state.jobs.find(x=>x.id==id);
+  if (!j) return;
+  showModal(`
+    <div class="form-row"><div class="form-group" style="margin-bottom:0"><label>Job title *</label><input type="text" id="ej-title" value="${j.title}"></div><div class="form-group" style="margin-bottom:0"><label>Department</label><input type="text" id="ej-dept" value="${j.department||''}"></div></div>
+    <div class="form-row"><div class="form-group" style="margin-bottom:0"><label>Location</label><input type="text" id="ej-loc" value="${j.location||''}"></div><div class="form-group" style="margin-bottom:0"><label>Status</label><select id="ej-status">${JOB_STATUSES.map(s=>`<option${s===j.status?' selected':''}>${s}</option>`).join('')}</select></div></div>
+    <div class="form-group"><label>Description / requirements</label><textarea rows="4" id="ej-desc">${j.description||''}</textarea></div>
+  `, 'Edit job posting', [
+    {label:'Save changes', primary:true, action:`submitEditJob(${id})`},
+    {label:'Delete posting', danger:true, action:`deleteJob(${id})`}
+  ]);
+}
+
+function submitEditJob(id) {
+  const j = state.jobs.find(x=>x.id==id);
+  if (!j) return;
+  j.title = document.getElementById('ej-title')?.value?.trim()||j.title;
+  j.department = document.getElementById('ej-dept')?.value||'';
+  j.location = document.getElementById('ej-loc')?.value||'';
+  j.status = document.getElementById('ej-status')?.value||j.status;
+  j.description = document.getElementById('ej-desc')?.value||'';
+  saveState();
+  closeModal();
+  renderSidebar();
+  renderJob(id);
+}
+
+function deleteJob(id) {
+  if (!confirm('Delete this job posting and all its candidates?')) return;
+  state.jobs = state.jobs.filter(j=>j.id!=id);
+  delete state.applicants[id];
+  state.selectedJobId = null;
+  saveState();
+  closeModal();
+  renderSidebar();
+  document.getElementById('main-content').innerHTML = `<div class="empty-state"><i class="ti ti-briefcase" aria-hidden="true"></i><p>Select a job to view candidates</p></div>`;
+}
+
+function showModal(body, title, buttons=[]) {
+  const btns = buttons.map(b=>
+    b.danger ? `<button class="btn btn-danger" onclick="${b.action}">${b.label}</button>`
+    : b.primary ? `<button class="btn btn-primary" onclick="${b.action}">${b.label}</button>`
+    : `<button class="btn" onclick="${b.action}">${b.label}</button>`
+  ).join('');
+  document.getElementById('modal-root').innerHTML = `
+    <div class="overlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+        <h3>${title}</h3>
+        ${body}
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          ${btns}
+        </div>
+      </div>
+    </div>`;
+}
+
+function closeModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+loadState();
+</script>
